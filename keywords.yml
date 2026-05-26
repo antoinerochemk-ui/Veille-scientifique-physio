@@ -162,9 +162,9 @@ scoring:
       - "nursing education"
 
 decision_rules:
-  high_priority_threshold: 18
-  watch_threshold: 12
-  peripheral_threshold: 7
+  high_priority_threshold: 22
+  watch_threshold: 14
+  peripheral_threshold: 8
 
 tags:
   high_priority:
