@@ -1,0 +1,160 @@
+# ============================================================
+# Règles de scoring pour la veille scientifique automatisée
+# Antoine Roche — Physiothérapie, éducation médicale, raisonnement clinique, rachis
+# ============================================================
+
+scoring:
+
+  high_priority:
+    points: 5
+    keywords:
+      - "learning by concordance"
+      - "concordance-based learning"
+      - "formation par concordance"
+      - "script concordance test"
+      - "script concordance testing"
+      - "clinical reasoning"
+      - "diagnostic uncertainty"
+      - "clinical uncertainty"
+      - "tolerance of uncertainty"
+      - "physiotherapy"
+      - "physical therapy"
+
+  education:
+    points: 3
+    keywords:
+      - "health professions education"
+      - "medical education"
+      - "learning"
+      - "teaching"
+      - "curriculum"
+      - "pedagogy"
+      - "instructional design"
+      - "feedback"
+      - "assessment"
+      - "competency-based education"
+      - "OSCE"
+      - "objective structured clinical examination"
+      - "simulation"
+      - "case-based learning"
+
+  spine_msk:
+    points: 4
+    keywords:
+      - "low back pain"
+      - "neck pain"
+      - "lumbar"
+      - "cervical"
+      - "thoracic"
+      - "spine"
+      - "spinal"
+      - "musculoskeletal"
+      - "manual therapy"
+      - "orthopaedic manual therapy"
+      - "orthopedic manual therapy"
+      - "mobilization"
+      - "mobilisation"
+      - "manipulation"
+      - "spinal manipulation"
+      - "spinal mobilization"
+      - "spinal mobilisation"
+
+  clinical_tests:
+    points: 4
+    keywords:
+      - "validity"
+      - "reliability"
+      - "reproducibility"
+      - "diagnostic accuracy"
+      - "clinical test"
+      - "physical examination"
+      - "assessment"
+      - "PIVM"
+      - "PAIVM"
+      - "passive intervertebral motion"
+      - "passive accessory intervertebral motion"
+      - "palpation"
+
+  active_treatments:
+    points: 3
+    keywords:
+      - "exercise"
+      - "therapeutic exercise"
+      - "motor control"
+      - "strengthening"
+      - "graded activity"
+      - "self-management"
+      - "core stability"
+      - "stabilization"
+      - "stabilisation"
+      - "directional preference"
+      - "centralization"
+      - "centralisation"
+      - "McKenzie"
+      - "Mechanical Diagnosis and Therapy"
+      - "MDT"
+
+  passive_treatments:
+    points: 2
+    keywords:
+      - "massage"
+      - "traction"
+      - "manual therapy"
+      - "mobilization"
+      - "mobilisation"
+      - "manipulation"
+      - "passive treatment"
+      - "electrotherapy"
+
+  case_reports:
+    points: 2
+    keywords:
+      - "case report"
+      - "case study"
+      - "clinical case"
+
+  negative_keywords:
+    points: -4
+    keywords:
+      - "veterinary"
+      - "animal study"
+      - "dentistry"
+      - "dental"
+      - "pharmacological"
+      - "surgery only"
+      - "invasive procedure"
+
+decision_rules:
+  high_priority_threshold: 12
+  watch_threshold: 8
+  peripheral_threshold: 5
+
+tags:
+  high_priority:
+    - "haute_priorite"
+    - "a_lire"
+  education:
+    - "education_medicale"
+    - "sciences_education"
+  concordance:
+    - "formation_par_concordance"
+    - "TCS"
+  reasoning:
+    - "raisonnement_clinique"
+    - "incertitude"
+  spine:
+    - "rachis"
+    - "physiotherapie_msk"
+  manual_therapy:
+    - "therapie_manuelle"
+    - "OMT"
+  tests:
+    - "tests_cliniques"
+    - "validite"
+    - "fiabilite"
+  treatments:
+    - "traitement_actif"
+    - "traitement_passif"
+    - "exercice"
+  cases:
+    - "cas_clinique"
