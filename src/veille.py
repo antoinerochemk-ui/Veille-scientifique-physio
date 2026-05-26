@@ -18,10 +18,17 @@ REPORTS_DIR = BASE_DIR / "reports"
 
 EUROPE_PMC_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 
+PUBMED_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
+PUBMED_ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+
+NCBI_TOOL_NAME = "veille_scientifique_physio"
+NCBI_EMAIL = "antoine.roche.mk@gmail.com"
+
 
 def load_yaml(path: Path) -> dict:
     if not path.exists():
         raise FileNotFoundError(f"Fichier introuvable : {path}")
+
     with path.open("r", encoding="utf-8") as f:
         return yaml.safe_load(f)
 
@@ -29,6 +36,7 @@ def load_yaml(path: Path) -> dict:
 def load_seen_articles() -> set:
     if not SEEN_FILE.exists():
         return set()
+
     try:
         with SEEN_FILE.open("r", encoding="utf-8") as f:
             data = json.load(f)
@@ -54,30 +62,50 @@ def article_identifier(article: dict) -> str:
     title = article.get("title", "")
 
     if doi:
-        return f"doi:{doi.lower()}"
+        return f"doi:{doi.lower().strip()}"
     if pmid:
-        return f"pmid:{pmid}"
+        return f"pmid:{str(pmid).strip()}"
     if pmcid:
-        return f"pmcid:{pmcid}"
-    return "title:" + re.sub(r"\s+", " ", title.lower()).strip()
+        return f"pmcid:{str(pmcid).strip()}"
+
+    clean_title = re.sub(r"\s+", " ", title.lower()).strip()
+    return f"title:{clean_title}"
 
 
 def clean_abstract(text: str) -> str:
     if not text:
         return ""
+
     text = re.sub(r"<[^>]+>", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 
 
+def build_article_url(item: dict) -> str:
+    doi = item.get("doi")
+    pmid = item.get("pmid")
+    pmcid = item.get("pmcid")
+
+    if doi:
+        return f"https://doi.org/{doi}"
+    if pmid:
+        return f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
+    if pmcid:
+        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
+
+    title = quote(item.get("title", ""))
+    return f"https://europepmc.org/search?query={title}"
+
+
 def fetch_europe_pmc(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
     """
     Recherche Europe PMC.
-    On ajoute une contrainte de date pour limiter la veille aux publications récentes.
+    Europe PMC couvre une grande partie du biomédical, dont PubMed/MEDLINE et PubMed Central.
     """
     start_date = (date.today() - timedelta(days=days_back)).strftime("%Y-%m-%d")
+    end_date = date.today().strftime("%Y-%m-%d")
 
-    final_query = f"({query}) AND FIRST_PDATE:[{start_date} TO {date.today().strftime('%Y-%m-%d')}]"
+    final_query = f"({query}) AND FIRST_PDATE:[{start_date} TO {end_date}]"
 
     params = {
         "query": final_query,
@@ -108,25 +136,103 @@ def fetch_europe_pmc(query: str, days_back: int = 14, page_size: int = 25) -> li
             "source": "Europe PMC",
             "url": build_article_url(item),
         }
+
         if article["title"]:
             articles.append(article)
 
     return articles
 
 
-def build_article_url(item: dict) -> str:
-    doi = item.get("doi")
-    pmid = item.get("pmid")
-    pmcid = item.get("pmcid")
+def fetch_pubmed(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
+    """
+    Recherche directe dans PubMed via NCBI E-utilities.
+    Cette fonction récupère les métadonnées principales : titre, auteurs, revue, année,
+    date de publication, DOI, PMID, PMCID et lien PubMed.
+    """
+    start_date = (date.today() - timedelta(days=days_back)).strftime("%Y/%m/%d")
+    end_date = date.today().strftime("%Y/%m/%d")
 
-    if doi:
-        return f"https://doi.org/{doi}"
-    if pmid:
-        return f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/"
-    if pmcid:
-        return f"https://www.ncbi.nlm.nih.gov/pmc/articles/{pmcid}/"
-    title = quote(item.get("title", ""))
-    return f"https://europepmc.org/search?query={title}"
+    search_params = {
+        "db": "pubmed",
+        "term": query,
+        "retmode": "json",
+        "retmax": page_size,
+        "sort": "pub_date",
+        "datetype": "pdat",
+        "mindate": start_date,
+        "maxdate": end_date,
+        "tool": NCBI_TOOL_NAME,
+        "email": NCBI_EMAIL,
+    }
+
+    search_response = requests.get(PUBMED_ESEARCH_URL, params=search_params, timeout=30)
+    search_response.raise_for_status()
+    search_data = search_response.json()
+
+    ids = search_data.get("esearchresult", {}).get("idlist", [])
+    if not ids:
+        return []
+
+    summary_params = {
+        "db": "pubmed",
+        "id": ",".join(ids),
+        "retmode": "json",
+        "tool": NCBI_TOOL_NAME,
+        "email": NCBI_EMAIL,
+    }
+
+    summary_response = requests.get(PUBMED_ESUMMARY_URL, params=summary_params, timeout=30)
+    summary_response.raise_for_status()
+    summary_data = summary_response.json()
+
+    articles = []
+
+    for pmid in ids:
+        item = summary_data.get("result", {}).get(pmid, {})
+        if not item:
+            continue
+
+        title = item.get("title", "").strip()
+        authors_list = item.get("authors", [])
+        authors = ", ".join(
+            [author.get("name", "") for author in authors_list if author.get("name")]
+        )
+
+        articleids = item.get("articleids", [])
+        doi = ""
+        pmcid = ""
+
+        for article_id in articleids:
+            id_type = article_id.get("idtype", "")
+            value = article_id.get("value", "")
+
+            if id_type == "doi":
+                doi = value.strip()
+            elif id_type == "pmc":
+                pmcid = value.strip()
+
+        pubdate = item.get("pubdate", "").strip()
+        year_match = re.search(r"\b(19\d{2}|20\d{2})\b", pubdate)
+        year = year_match.group(1) if year_match else ""
+
+        article = {
+            "title": title,
+            "authors": authors,
+            "journal": item.get("fulljournalname", "").strip(),
+            "year": year,
+            "publication_date": pubdate,
+            "doi": doi,
+            "pmid": pmid,
+            "pmcid": pmcid,
+            "abstract": "",
+            "source": "PubMed",
+            "url": f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/",
+        }
+
+        if title:
+            articles.append(article)
+
+    return articles
 
 
 def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
@@ -150,11 +256,13 @@ def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
         keywords = config.get("keywords", [])
 
         category_matches = []
-        for kw in keywords:
-            kw_norm = normalize_text(kw)
-            if kw_norm in text:
+
+        for keyword in keywords:
+            keyword_norm = normalize_text(keyword)
+
+            if keyword_norm in text:
                 total_score += points
-                category_matches.append(kw)
+                category_matches.append(keyword)
 
         if category_matches:
             matched[category] = category_matches
@@ -165,9 +273,9 @@ def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
 def classify_article(score: int, keyword_config: dict) -> str:
     rules = keyword_config.get("decision_rules", {})
 
-    high = int(rules.get("high_priority_threshold", 12))
-    watch = int(rules.get("watch_threshold", 8))
-    peripheral = int(rules.get("peripheral_threshold", 5))
+    high = int(rules.get("high_priority_threshold", 22))
+    watch = int(rules.get("watch_threshold", 14))
+    peripheral = int(rules.get("peripheral_threshold", 8))
 
     if score >= high:
         return "Haute priorité"
@@ -187,19 +295,42 @@ def propose_tags(matched: dict, article: dict, keyword_config: dict) -> list[str
     if matched.get("high_priority"):
         tags.update(tags_config.get("high_priority", []))
 
-    if matched.get("education"):
+    if matched.get("education") or matched.get("education_anchor") or matched.get("education_methods"):
         tags.update(tags_config.get("education", []))
 
     if any(term in text for term in ["concordance", "script concordance"]):
         tags.update(tags_config.get("concordance", []))
 
-    if any(term in text for term in ["clinical reasoning", "uncertainty", "diagnostic uncertainty"]):
+    if any(
+        term in text
+        for term in [
+            "clinical reasoning",
+            "diagnostic reasoning",
+            "clinical uncertainty",
+            "diagnostic uncertainty",
+            "therapeutic uncertainty",
+            "tolerance of uncertainty",
+            "intolerance of uncertainty",
+        ]
+    ):
         tags.update(tags_config.get("reasoning", []))
 
-    if matched.get("spine_msk"):
+    if matched.get("spine_msk") or matched.get("spine_core"):
         tags.update(tags_config.get("spine", []))
 
-    if any(term in text for term in ["manual therapy", "orthopaedic manual therapy", "orthopedic manual therapy", "omt"]):
+    if any(
+        term in text
+        for term in [
+            "manual therapy",
+            "orthopaedic manual therapy",
+            "orthopedic manual therapy",
+            "omt",
+            "ompt",
+            "spinal manipulation",
+            "spinal mobilization",
+            "spinal mobilisation",
+        ]
+    ):
         tags.update(tags_config.get("manual_therapy", []))
 
     if matched.get("clinical_tests"):
@@ -222,6 +353,8 @@ def format_article_md(article: dict, score: int, decision: str, matched: dict, t
     pub_date = article.get("publication_date", "")
     doi = article.get("doi", "")
     pmid = article.get("pmid", "")
+    pmcid = article.get("pmcid", "")
+    source = article.get("source", "")
     url = article.get("url", "")
     abstract = article.get("abstract", "")
 
@@ -229,8 +362,9 @@ def format_article_md(article: dict, score: int, decision: str, matched: dict, t
         abstract = abstract[:1200].rstrip() + "..."
 
     matched_lines = []
-    for category, kws in matched.items():
-        matched_lines.append(f"  - **{category}** : {', '.join(kws)}")
+
+    for category, keywords in matched.items():
+        matched_lines.append(f"  - **{category}** : {', '.join(keywords)}")
 
     matched_md = "\n".join(matched_lines) if matched_lines else "  - Aucun mot-clé fort détecté"
     tags_md = ", ".join([f"`#{tag}`" for tag in tags]) if tags else "Aucun tag proposé"
@@ -242,8 +376,10 @@ def format_article_md(article: dict, score: int, decision: str, matched: dict, t
 - **Revue** : {journal}
 - **Année** : {year}
 - **Date de publication** : {pub_date}
+- **Source** : {source}
 - **DOI** : {doi or "Non renseigné"}
 - **PMID** : {pmid or "Non renseigné"}
+- **PMCID** : {pmcid or "Non renseigné"}
 - **Lien** : {url}
 - **Score** : {score}
 - **Décision** : **{decision}**
@@ -317,6 +453,35 @@ def generate_report(new_articles: list[dict]) -> Path:
     return report_path
 
 
+def fetch_from_all_sources(query: str, name: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
+    """
+    Interroge plusieurs sources bibliographiques gratuites.
+    Pour l'instant :
+    - Europe PMC
+    - PubMed direct
+    """
+    all_articles = []
+
+    sources = [
+        ("Europe PMC", fetch_europe_pmc),
+        ("PubMed", fetch_pubmed),
+    ]
+
+    for source_name, fetcher in sources:
+        try:
+            print(f"  Source : {source_name}")
+            articles = fetcher(query=query, days_back=days_back, page_size=page_size)
+            print(f"  {len(articles)} article(s) trouvé(s) via {source_name}")
+            all_articles.extend(articles)
+        except Exception as e:
+            print(f"  Erreur {source_name} pour {name}: {e}", file=sys.stderr)
+            continue
+
+        time.sleep(0.5)
+
+    return all_articles
+
+
 def main() -> int:
     print("Chargement des fichiers de configuration...")
 
@@ -324,32 +489,35 @@ def main() -> int:
     keyword_config = load_yaml(KEYWORDS_FILE)
 
     queries = queries_config.get("queries", [])
+
     if not queries:
         print("Aucune requête trouvée dans queries.yml")
         return 1
 
     seen = load_seen_articles()
     new_seen = set(seen)
+
     collected = []
     already_collected = set()
 
     print(f"{len(queries)} requêtes chargées.")
     print("Recherche des nouveaux articles...")
 
-    for q in queries:
-        name = q.get("name", "Requête sans nom")
-        query = q.get("query", "")
+    for query_item in queries:
+        name = query_item.get("name", "Requête sans nom")
+        query = query_item.get("query", "")
 
         if not query:
             continue
 
         print(f"- Recherche : {name}")
 
-        try:
-            articles = fetch_europe_pmc(query=query, days_back=14, page_size=25)
-        except Exception as e:
-            print(f"  Erreur pendant la recherche {name}: {e}", file=sys.stderr)
-            continue
+        articles = fetch_from_all_sources(
+            query=query,
+            name=name,
+            days_back=14,
+            page_size=25,
+        )
 
         for article in articles:
             identifier = article_identifier(article)
@@ -375,8 +543,6 @@ def main() -> int:
 
             new_seen.add(identifier)
             already_collected.add(identifier)
-
-        time.sleep(0.5)
 
     report_path = generate_report(collected)
     save_seen_articles(new_seen)
