@@ -1,74 +1,101 @@
 # ============================================================
 # Règles de scoring pour la veille scientifique automatisée
-# Antoine Roche — Physiothérapie, éducation médicale, raisonnement clinique, rachis
+# Version resserrée — Antoine Roche
 # ============================================================
 
 scoring:
 
-  high_priority:
-    points: 5
+  core_concordance:
+    points: 12
     keywords:
       - "learning by concordance"
       - "concordance-based learning"
       - "formation par concordance"
       - "script concordance test"
       - "script concordance testing"
+      - "script concordance"
+
+  core_reasoning:
+    points: 8
+    keywords:
       - "clinical reasoning"
+      - "clinical decision-making"
+      - "clinical decision making"
+      - "diagnostic reasoning"
       - "diagnostic uncertainty"
       - "clinical uncertainty"
+      - "therapeutic uncertainty"
       - "tolerance of uncertainty"
+      - "intolerance of uncertainty"
+
+  physio_anchor:
+    points: 5
+    keywords:
       - "physiotherapy"
       - "physical therapy"
+      - "physical therapist"
+      - "physical therapists"
+      - "rehabilitation"
 
-  education:
-    points: 3
+  education_anchor:
+    points: 4
     keywords:
       - "health professions education"
       - "medical education"
-      - "learning"
-      - "teaching"
-      - "curriculum"
-      - "pedagogy"
-      - "instructional design"
+      - "physiotherapy education"
+      - "physical therapist education"
+      - "clinical education"
+
+  education_methods:
+    points: 3
+    keywords:
       - "feedback"
-      - "assessment"
-      - "competency-based education"
       - "OSCE"
       - "objective structured clinical examination"
-      - "simulation"
+      - "simulation-based learning"
       - "case-based learning"
+      - "problem-based learning"
+      - "competency-based education"
+      - "assessment tool"
+      - "assessment tools"
+      - "entrustable professional activities"
 
-  spine_msk:
-    points: 4
+  spine_core:
+    points: 5
     keywords:
       - "low back pain"
       - "neck pain"
+      - "spinal pain"
+      - "lumbar spine"
+      - "cervical spine"
+      - "thoracic spine"
       - "lumbar"
       - "cervical"
       - "thoracic"
-      - "spine"
-      - "spinal"
-      - "musculoskeletal"
+
+  manual_therapy:
+    points: 4
+    keywords:
       - "manual therapy"
       - "orthopaedic manual therapy"
       - "orthopedic manual therapy"
-      - "mobilization"
-      - "mobilisation"
-      - "manipulation"
       - "spinal manipulation"
       - "spinal mobilization"
       - "spinal mobilisation"
+      - "mobilization"
+      - "mobilisation"
+      - "manipulation"
+      - "OMT"
 
   clinical_tests:
     points: 4
     keywords:
+      - "diagnostic accuracy"
       - "validity"
       - "reliability"
       - "reproducibility"
-      - "diagnostic accuracy"
       - "clinical test"
       - "physical examination"
-      - "assessment"
       - "PIVM"
       - "PAIVM"
       - "passive intervertebral motion"
@@ -78,8 +105,8 @@ scoring:
   active_treatments:
     points: 3
     keywords:
-      - "exercise"
       - "therapeutic exercise"
+      - "exercise therapy"
       - "motor control"
       - "strengthening"
       - "graded activity"
@@ -87,74 +114,92 @@ scoring:
       - "core stability"
       - "stabilization"
       - "stabilisation"
+      - "McKenzie"
+      - "Mechanical Diagnosis and Therapy"
       - "directional preference"
       - "centralization"
       - "centralisation"
-      - "McKenzie"
-      - "Mechanical Diagnosis and Therapy"
-      - "MDT"
 
   passive_treatments:
     points: 2
     keywords:
-      - "massage"
       - "traction"
-      - "manual therapy"
-      - "mobilization"
-      - "mobilisation"
-      - "manipulation"
-      - "passive treatment"
+      - "massage"
       - "electrotherapy"
+      - "ultrasound therapy"
+      - "shortwave diathermy"
+      - "shockwave"
 
   case_reports:
-    points: 2
+    points: 1
     keywords:
       - "case report"
       - "case study"
       - "clinical case"
 
   negative_keywords:
-    points: -4
+    points: -10
     keywords:
       - "veterinary"
       - "animal study"
       - "dentistry"
       - "dental"
+      - "surgery"
+      - "surgical"
+      - "intraoperative"
+      - "postoperative"
+      - "endoscopic spine surgery"
+      - "spinal surgery"
+      - "lumbar interbody fusion"
+      - "graft"
+      - "wound"
+      - "needle-knife"
       - "pharmacological"
-      - "surgery only"
-      - "invasive procedure"
+      - "drug therapy"
+      - "cancer"
+      - "breast cancer"
+      - "nursing students"
+      - "nursing education"
 
 decision_rules:
-  high_priority_threshold: 12
-  watch_threshold: 8
-  peripheral_threshold: 5
+  high_priority_threshold: 18
+  watch_threshold: 12
+  peripheral_threshold: 7
 
 tags:
   high_priority:
     - "haute_priorite"
     - "a_lire"
+
   education:
     - "education_medicale"
     - "sciences_education"
+
   concordance:
     - "formation_par_concordance"
     - "TCS"
+
   reasoning:
     - "raisonnement_clinique"
     - "incertitude"
+
   spine:
     - "rachis"
     - "physiotherapie_msk"
+
   manual_therapy:
     - "therapie_manuelle"
     - "OMT"
+
   tests:
     - "tests_cliniques"
     - "validite"
     - "fiabilite"
+
   treatments:
     - "traitement_actif"
     - "traitement_passif"
     - "exercice"
+
   cases:
     - "cas_clinique"
