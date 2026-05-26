@@ -35,4 +35,5 @@ jobs:
           git config user.email "github-actions@github.com"
           git add reports/ seen_articles.json
           git commit -m "Update scientific watch report" || echo "No changes to commit"
+          git pull --rebase origin main
           git push
