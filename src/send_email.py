@@ -11,34 +11,42 @@ REPORTS_DIR = BASE_DIR / "reports"
 
 
 THEMES = {
+    "Formation par concordance / TCS": [
+        "script concordance test",
+        "script concordance tests",
+        "script concordance testing",
+        "script concordance",
+        "learning by concordance",
+        "concordance-based learning",
+        "formation par concordance",
+    ],
     "Raisonnement clinique / éducation": [
         "clinical reasoning",
         "diagnostic reasoning",
+        "clinical decision making",
+        "clinical decision-making",
         "medical education",
+        "health professions education",
         "physical therapist education",
+        "simulation-based learning",
         "simulation",
         "assessment",
         "preceptorship",
         "clinical education",
     ],
-    "Formation par concordance / TCS": [
-        "script concordance",
-        "concordance test",
-        "learning by concordance",
-        "concordance",
-    ],
     "IA / diagnostic / physiothérapie MSK": [
         "artificial intelligence",
-        "ai",
         "diagnostic utility",
+        "machine learning",
+        "musculoskeletal physical therapy",
         "musculoskeletal",
-        "physical therapy",
-        "physical therapist",
+        "physical therapists",
     ],
     "Rachis / OMT / tests / traitements": [
-        "spine",
         "whole-spine",
+        "spine",
         "low back pain",
+        "neck pain",
         "cervical",
         "thoracic",
         "lumbar",
@@ -46,17 +54,39 @@ THEMES = {
         "manual therapy",
         "orthopaedic manual physical therapy",
         "orthopedic manual physical therapy",
-        "ompt",
         "omt",
+        "ompt",
     ],
     "Cas cliniques / diagnostic différentiel": [
         "case report",
         "case study",
+        "rare case",
         "differential diagnosis",
-        "management",
         "syndrome",
         "dizziness",
     ],
+}
+
+
+WHY_READ = {
+    "Formation par concordance / TCS": (
+        "Directement lié à ton axe Formation par Concordance / TCS et à l’évaluation du raisonnement clinique."
+    ),
+    "Raisonnement clinique / éducation": (
+        "Pertinent pour ta thèse, les ECOS, l’évaluation et l’enseignement du raisonnement clinique."
+    ),
+    "IA / diagnostic / physiothérapie MSK": (
+        "Utile pour suivre l’impact de l’IA sur le diagnostic, la décision clinique et la physiothérapie MSK."
+    ),
+    "Rachis / OMT / tests / traitements": (
+        "Pertinent pour ton axe rachis, thérapie manuelle, tests cliniques et interventions MSK."
+    ),
+    "Cas cliniques / diagnostic différentiel": (
+        "À lire surtout si le cas apporte une réflexion utile sur le diagnostic différentiel ou la prise en charge."
+    ),
+    "Autres articles pertinents": (
+        "Article potentiellement intéressant, mais à vérifier selon ton temps disponible et tes priorités."
+    ),
 }
 
 
@@ -86,7 +116,7 @@ def extract_synthesis(report_text: str) -> str:
 def split_articles(section_text: str) -> list[str]:
     """
     Découpe une section Markdown en blocs d'articles.
-    Le rapport semble utiliser des titres de niveau ### pour chaque article.
+    Chaque article commence normalement par un titre Markdown de niveau ###.
     """
     chunks = re.split(r"\n(?=###\s+)", section_text)
     return [chunk.strip() for chunk in chunks if chunk.strip().startswith("### ")]
@@ -101,6 +131,7 @@ def first_match(patterns: list[str], text: str) -> str:
 
 
 def clean_markdown(value: str) -> str:
+    value = value or ""
     value = re.sub(r"\*\*", "", value)
     value = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", value)
     return value.strip(" -:\n\t")
@@ -186,8 +217,77 @@ def extract_article_info(article_block: str) -> dict:
 
 
 def classify_theme(article: dict) -> str:
+    title = article["title"].lower()
     searchable = f"{article['title']} {article['raw']}".lower()
 
+    # Règles prioritaires basées sur le titre.
+    # Cela évite qu'un article de raisonnement clinique soit rangé par erreur en TCS.
+    if any(
+        term in title
+        for term in [
+            "script concordance",
+            "learning by concordance",
+            "concordance-based learning",
+            "formation par concordance",
+        ]
+    ):
+        return "Formation par concordance / TCS"
+
+    if any(
+        term in title
+        for term in [
+            "clinical reasoning",
+            "diagnostic reasoning",
+            "clinical decision making",
+            "clinical decision-making",
+            "preceptorship",
+            "simulation",
+        ]
+    ):
+        return "Raisonnement clinique / éducation"
+
+    if any(
+        term in title
+        for term in [
+            "artificial intelligence",
+            "diagnostic utility",
+            "machine learning",
+        ]
+    ):
+        return "IA / diagnostic / physiothérapie MSK"
+
+    if any(
+        term in title
+        for term in [
+            "spine",
+            "whole-spine",
+            "low back pain",
+            "neck pain",
+            "cervical",
+            "lumbar",
+            "thoracic",
+            "sensorimotor",
+            "manual therapy",
+            "orthopaedic manual physical therapy",
+            "orthopedic manual physical therapy",
+        ]
+    ):
+        return "Rachis / OMT / tests / traitements"
+
+    if any(
+        term in title
+        for term in [
+            "case report",
+            "case study",
+            "rare case",
+            "differential diagnosis",
+            "syndrome",
+            "dizziness",
+        ]
+    ):
+        return "Cas cliniques / diagnostic différentiel"
+
+    # Fallback : si le titre ne suffit pas, on compte les mots-clés dans tout le bloc article.
     best_theme = "Autres articles pertinents"
     best_count = 0
 
@@ -200,12 +300,15 @@ def classify_theme(article: dict) -> str:
     return best_theme
 
 
-def format_article_line(article: dict, index: int | None = None) -> str:
+def format_article_line(article: dict, theme: str | None = None, index: int | None = None) -> str:
     prefix = f"{index}. " if index is not None else "- "
+    why = WHY_READ.get(theme or "Autres articles pertinents", WHY_READ["Autres articles pertinents"])
+
     return (
         f"{prefix}{article['first_author']} ({article['year']}). "
         f"{article['title']}\n"
-        f"   DOI/lien : {article['link']}"
+        f"   DOI/lien : {article['link']}\n"
+        f"   Pourquoi le lire ? {why}"
     )
 
 
@@ -221,33 +324,47 @@ def build_digest(report_text: str) -> str:
     article_blocks = split_articles(high_section)
     high_articles = [extract_article_info(block) for block in article_blocks]
 
-    # Le rapport est déjà classé par priorité ; on garde l'ordre, puis score si disponible.
-    high_articles = sorted(
-        high_articles,
-        key=lambda article: article["score"],
-        reverse=True,
-    ) if any(article["score"] > 0 for article in high_articles) else high_articles
+    # On ajoute le thème à chaque article.
+    for article in high_articles:
+        article["theme"] = classify_theme(article)
+
+    # Si un score est disponible, on trie par score décroissant.
+    # Sinon, on garde l'ordre du rapport.
+    if any(article["score"] > 0 for article in high_articles):
+        high_articles = sorted(
+            high_articles,
+            key=lambda article: article["score"],
+            reverse=True,
+        )
 
     top5 = high_articles[:5]
 
     themed_articles = {}
     for article in high_articles:
-        theme = classify_theme(article)
+        theme = article["theme"]
         themed_articles.setdefault(theme, []).append(article)
 
-    top5_text = "\n\n".join(
-        format_article_line(article, index=i + 1)
-        for i, article in enumerate(top5)
-    ) if top5 else "Aucun article prioritaire cette semaine."
+    top5_text = (
+        "\n\n".join(
+            format_article_line(article, theme=article["theme"], index=i + 1)
+            for i, article in enumerate(top5)
+        )
+        if top5
+        else "Aucun article prioritaire cette semaine."
+    )
 
     themes_text_parts = []
     for theme, articles in themed_articles.items():
         theme_lines = [f"### {theme}"]
         for article in articles:
-            theme_lines.append(format_article_line(article))
+            theme_lines.append(format_article_line(article, theme=theme))
         themes_text_parts.append("\n".join(theme_lines))
 
-    themes_text = "\n\n".join(themes_text_parts) if themes_text_parts else "Aucun article thématique cette semaine."
+    themes_text = (
+        "\n\n".join(themes_text_parts)
+        if themes_text_parts
+        else "Aucun article thématique cette semaine."
+    )
 
     return f"""Bonjour Antoine,
 
