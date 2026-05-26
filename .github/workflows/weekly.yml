@@ -1,0 +1,38 @@
+name: Veille scientifique hebdomadaire
+
+on:
+  schedule:
+    # Tous les lundis à 07:00 UTC, soit environ 08:00 ou 09:00 en France selon la saison
+    - cron: "0 7 * * 1"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  run-scientific-watch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Lancer la veille scientifique
+        run: python src/veille.py
+
+      - name: Enregistrer les rapports générés
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add reports/ seen_articles.json
+          git commit -m "Update scientific watch report" || echo "No changes to commit"
+          git push
