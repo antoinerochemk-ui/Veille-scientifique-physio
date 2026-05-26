@@ -327,6 +327,7 @@ def article_card_html(article: dict, rank: int | None = None) -> str:
     why = WHY_READ.get(theme, WHY_READ["Autres articles pertinents"])
 
     rank_html = f"<span style='font-weight:700;color:{color};'>#{rank}</span> " if rank else ""
+
     link_html = (
         f"<a href='{escape(article['link'])}' style='color:{color};text-decoration:none;font-weight:600;'>DOI / lien</a>"
         if article["link"]
@@ -334,20 +335,20 @@ def article_card_html(article: dict, rank: int | None = None) -> str:
     )
 
     return f"""
-    <div style="border:1px solid #E5E7EB;border-left:6px solid {color};border-radius:14px;padding:14px 16px;margin:12px 0;background:#FFFFFF;">
+    <div style="box-sizing:border-box;width:100%;max-width:100%;border:1px solid #E5E7EB;border-left:6px solid {color};border-radius:14px;padding:14px 16px;margin:12px 0;background:#FFFFFF;">
         <div style="font-size:13px;color:{color};font-weight:700;text-transform:uppercase;letter-spacing:0.03em;margin-bottom:6px;">
             {escape(theme)}
         </div>
         <div style="font-size:16px;line-height:1.35;color:#111827;font-weight:700;margin-bottom:6px;">
             {rank_html}{escape(article['first_author'])} ({escape(article['year'])})
         </div>
-        <div style="font-size:15px;line-height:1.4;color:#1F2937;margin-bottom:8px;">
+        <div style="font-size:15px;line-height:1.4;color:#1F2937;margin-bottom:8px;word-wrap:break-word;overflow-wrap:break-word;">
             {escape(article['title'])}
         </div>
-        <div style="font-size:13px;color:#374151;margin-bottom:8px;">
+        <div style="font-size:13px;color:#374151;margin-bottom:8px;word-wrap:break-word;overflow-wrap:break-word;">
             {link_html}
         </div>
-        <div style="font-size:13px;line-height:1.45;color:#4B5563;background:#F9FAFB;border-radius:10px;padding:10px;">
+        <div style="font-size:13px;line-height:1.45;color:#4B5563;background:#F9FAFB;border-radius:10px;padding:10px;word-wrap:break-word;overflow-wrap:break-word;">
             <strong>Pourquoi le lire ?</strong> {escape(why)}
         </div>
     </div>
@@ -400,15 +401,54 @@ def build_digest_data(report_text: str) -> dict:
         for theme, articles in themed_articles.items()
     }
 
+    theme_counts = {
+        theme: len(articles)
+        for theme, articles in themed_articles.items()
+    }
+
     return {
         "synthesis": synthesis,
         "top3_general": top3_general,
         "top3_by_theme": top3_by_theme,
+        "theme_counts": theme_counts,
     }
+
+
+def build_priority_message(data: dict) -> str:
+    top_articles = data.get("top3_general", [])
+    themes = [article.get("theme", "Autres articles pertinents") for article in top_articles]
+
+    if not themes:
+        return "Aucun article prioritaire n’a été détecté cette semaine."
+
+    unique_themes = []
+    for theme in themes:
+        if theme not in unique_themes:
+            unique_themes.append(theme)
+
+    if len(unique_themes) == 1:
+        return (
+            f"Cette semaine, la lecture prioritaire concerne surtout le thème "
+            f"« {unique_themes[0]} ». Tu peux commencer par les 3 articles ci-dessous."
+        )
+
+    if len(unique_themes) == 2:
+        return (
+            f"Cette semaine, la lecture prioritaire se concentre surtout sur "
+            f"« {unique_themes[0]} » et « {unique_themes[1]} ». "
+            f"Les 3 articles ci-dessous sont les plus utiles à lire en premier."
+        )
+
+    return (
+        f"Cette semaine, la lecture prioritaire est répartie entre plusieurs axes : "
+        f"« {unique_themes[0]} », « {unique_themes[1]} » et « {unique_themes[2]} ». "
+        f"Les 3 articles ci-dessous sont les plus utiles à lire en premier."
+    )
 
 
 def build_plain_body(data: dict) -> str:
     synthesis = data["synthesis"]
+    priority_message = build_priority_message(data)
 
     top3_text = "\n\n".join(
         article_plain_text(article, rank=i + 1)
@@ -417,7 +457,8 @@ def build_plain_body(data: dict) -> str:
 
     theme_parts = []
     for theme, articles in data["top3_by_theme"].items():
-        lines = [theme]
+        total_theme_count = data["theme_counts"].get(theme, len(articles))
+        lines = [f"{theme} — Top {len(articles)} sur {total_theme_count} article(s)"]
         for article in articles:
             lines.append(article_plain_text(article))
         theme_parts.append("\n\n".join(lines))
@@ -435,6 +476,9 @@ Synthèse :
 - Périphérique : {synthesis['peripheral']}
 - Faible priorité : {synthesis['low']}
 
+Lecture prioritaire :
+{priority_message}
+
 Top 3 général :
 
 {top3_text}
@@ -451,6 +495,7 @@ Bonne lecture !
 
 def build_html_body(data: dict) -> str:
     synthesis = data["synthesis"]
+    priority_message = build_priority_message(data)
 
     top3_cards = "\n".join(
         article_card_html(article, rank=i + 1)
@@ -462,11 +507,17 @@ def build_html_body(data: dict) -> str:
         color = THEME_COLORS.get(theme, THEME_COLORS["Autres articles pertinents"])
         cards = "\n".join(article_card_html(article) for article in articles)
 
+        displayed_count = len(articles)
+        total_theme_count = data["theme_counts"].get(theme, displayed_count)
+
         theme_sections.append(
             f"""
-            <div style="margin-top:26px;">
+            <div style="margin-top:26px;box-sizing:border-box;width:100%;max-width:100%;">
                 <h3 style="font-size:18px;color:{color};margin:0 0 10px 0;border-bottom:2px solid {color};padding-bottom:6px;">
                     {escape(theme)}
+                    <span style="font-size:13px;color:#6B7280;font-weight:500;">
+                        — Top {displayed_count} sur {total_theme_count} article(s)
+                    </span>
                 </h3>
                 {cards}
             </div>
@@ -479,16 +530,17 @@ def build_html_body(data: dict) -> str:
 <!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#F3F4F6;font-family:Arial,Helvetica,sans-serif;color:#111827;">
-    <div style="max-width:820px;margin:0 auto;padding:24px;">
-        <div style="background:#FFFFFF;border-radius:18px;padding:26px;border:1px solid #E5E7EB;">
+    <div style="box-sizing:border-box;width:100%;max-width:820px;margin:0 auto;padding:24px;">
+        <div style="box-sizing:border-box;width:100%;max-width:100%;background:#FFFFFF;border-radius:18px;padding:26px;border:1px solid #E5E7EB;">
             <h1 style="font-size:26px;line-height:1.25;margin:0 0 8px 0;color:#111827;">
                 Veille scientifique hebdomadaire
             </h1>
+
             <p style="font-size:15px;color:#4B5563;margin:0 0 24px 0;">
                 Bonjour Antoine, voici ta synthèse automatisée de la semaine.
             </p>
 
-            <div style="display:block;background:#F9FAFB;border-radius:14px;padding:16px;margin-bottom:24px;border:1px solid #E5E7EB;">
+            <div style="box-sizing:border-box;width:100%;max-width:100%;display:block;background:#F9FAFB;border-radius:14px;padding:16px;margin-bottom:24px;border:1px solid #E5E7EB;">
                 <h2 style="font-size:19px;margin:0 0 12px 0;color:#111827;">Synthèse</h2>
                 <table style="width:100%;border-collapse:collapse;font-size:14px;">
                     <tr>
@@ -514,17 +566,23 @@ def build_html_body(data: dict) -> str:
                 </table>
             </div>
 
+            <div style="box-sizing:border-box;width:100%;max-width:100%;margin-bottom:22px;padding:14px 16px;border-radius:14px;background:#ECFDF5;border:1px solid #A7F3D0;color:#065F46;font-size:14px;line-height:1.45;">
+                <strong>Lecture prioritaire :</strong> {escape(priority_message)}
+            </div>
+
             <h2 style="font-size:21px;margin:0 0 14px 0;color:#111827;">
                 Top 3 général à lire
             </h2>
+
             {top3_cards if top3_cards else "<p>Aucun article prioritaire cette semaine.</p>"}
 
             <h2 style="font-size:21px;margin:30px 0 14px 0;color:#111827;">
                 Top 3 par thématique
             </h2>
+
             {theme_sections_html if theme_sections_html else "<p>Aucun article thématique cette semaine.</p>"}
 
-            <div style="margin-top:28px;padding:14px;border-radius:12px;background:#EFF6FF;color:#1E3A8A;font-size:14px;line-height:1.45;">
+            <div style="box-sizing:border-box;width:100%;max-width:100%;margin-top:28px;padding:14px;border-radius:12px;background:#EFF6FF;color:#1E3A8A;font-size:14px;line-height:1.45;">
                 Le rapport complet est en pièce jointe au format Markdown.
             </div>
 
