@@ -37,3 +37,10 @@ jobs:
           git commit -m "Update scientific watch report" || echo "No changes to commit"
           git pull --rebase origin main
           git push
+                
+      - name: Envoyer le rapport par mail
+        env:
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+        run: python src/send_email.py
