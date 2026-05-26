@@ -1,0 +1,94 @@
+# ============================================================
+# Requêtes de veille scientifique automatisée
+# Antoine Roche — Physiothérapie, éducation médicale, raisonnement clinique, rachis
+# ============================================================
+
+queries:
+
+  # ============================================================
+  # Bloc 1 — Formation par concordance, TCS, raisonnement clinique, incertitude
+  # ============================================================
+
+  - name: "Formation par concordance"
+    query: '"learning by concordance" OR "concordance-based learning" OR "concordance learning" OR "formation par concordance"'
+
+  - name: "Test de concordance de script"
+    query: '"script concordance test" OR "script concordance testing" OR "script concordance" OR "test de concordance de script"'
+
+  - name: "Raisonnement clinique santé"
+    query: '"clinical reasoning" AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy")'
+
+  - name: "Raisonnement clinique physiothérapie"
+    query: '"clinical reasoning" AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+
+  - name: "Incertitude et raisonnement clinique"
+    query: '("clinical uncertainty" OR uncertainty OR "diagnostic uncertainty" OR "therapeutic uncertainty") AND ("clinical reasoning" OR decision-making OR "clinical decision-making") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+
+  - name: "Tolérance à l’incertitude en santé"
+    query: '("tolerance of uncertainty" OR "intolerance of uncertainty" OR "uncertainty tolerance") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+
+  - name: "Incertitude diagnostique en physiothérapie"
+    query: '("diagnostic uncertainty" OR "clinical uncertainty" OR uncertainty) AND (physiotherapy OR "physical therapy" OR rehabilitation) AND (diagnosis OR assessment OR "clinical reasoning")'
+
+
+  # ============================================================
+  # Bloc 2 — Apprentissage, sciences de l’éducation, feedback, évaluation
+  # ============================================================
+
+  - name: "Sciences de l’éducation en santé"
+    query: '("health professions education" OR "medical education") AND (learning OR teaching OR curriculum OR pedagogy OR "instructional design")'
+
+  - name: "Feedback en éducation médicale"
+    query: 'feedback AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy") AND (learning OR assessment OR "clinical reasoning")'
+
+  - name: "Évaluation des compétences en santé"
+    query: '("competency-based education" OR "competency-based medical education" OR assessment) AND ("health professions education" OR physiotherapy OR "physical therapy")'
+
+  - name: "ECOS OSCE physiothérapie"
+    query: '(OSCE OR "objective structured clinical examination") AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+
+  - name: "Simulation et cas cliniques en éducation santé"
+    query: '(simulation OR "case-based learning" OR "clinical case" OR "case study") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+
+
+  # ============================================================
+  # Bloc 3 — Rachis, douleurs rachidiennes, thérapie manuelle
+  # ============================================================
+
+  - name: "Low back pain physiotherapy"
+    query: '("low back pain" OR "lumbar pain" OR lumbago) AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+
+  - name: "Neck pain physiotherapy"
+    query: '("neck pain" OR cervicalgia OR "cervical spine") AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+
+  - name: "Thoracic spine physiotherapy"
+    query: '("thoracic spine" OR "thoracic pain" OR "thoracic manual therapy") AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+
+  - name: "Thérapie manuelle rachis"
+    query: '("manual therapy" OR mobilization OR mobilisation OR manipulation OR "spinal manipulation" OR "spinal mobilization") AND (spine OR spinal OR lumbar OR cervical OR thoracic)'
+
+  - name: "OMT rachis"
+    query: '("orthopaedic manual therapy" OR "orthopedic manual therapy" OR OMT) AND (spine OR spinal OR lumbar OR cervical OR thoracic)'
+
+
+  # ============================================================
+  # Bloc 4 — Tests, traitements actifs/passifs, exercices, cas cliniques
+  # ============================================================
+
+  - name: "Tests cliniques rachis validité fiabilité"
+    query: '(validity OR reliability OR reproducibility OR "diagnostic accuracy") AND ("clinical test" OR "physical examination" OR assessment) AND (spine OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
+
+  - name: "PIVM PAIVM rachis"
+    query: '(PIVM OR PAIVM OR "passive intervertebral motion" OR "passive accessory intervertebral motion" OR palpation) AND (spine OR lumbar OR cervical OR thoracic)'
+
+  - name: "Traitements actifs rachis"
+    query: '(exercise OR "motor control" OR strengthening OR "graded activity" OR "self-management" OR "therapeutic exercise") AND ("low back pain" OR "neck pain" OR spine OR spinal)'
+
+  - name: "Traitements passifs rachis"
+    query: '(massage OR traction OR mobilization OR mobilisation OR manipulation OR "manual therapy" OR "passive treatment" OR electrotherapy) AND ("low back pain" OR "neck pain" OR spine OR spinal)'
+
+  - name: "McKenzie MDT rachis"
+    query: '("McKenzie" OR "Mechanical Diagnosis and Therapy" OR MDT OR centralization OR centralisation OR "directional preference") AND ("low back pain" OR "neck pain" OR spine OR spinal)'
+
+  - name: "Cas cliniques rachis physiothérapie"
+    query: '("case report" OR "case study" OR "clinical case") AND (physiotherapy OR "physical therapy" OR rehabilitation) AND (spine OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
