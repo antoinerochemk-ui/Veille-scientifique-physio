@@ -58,9 +58,13 @@ Bonne lecture !
 
 
 def send_email(report_path: Path) -> None:
-    smtp_username = os.environ["SMTP_USERNAME"]
-    smtp_password = os.environ["SMTP_PASSWORD"]
-    mail_to = os.environ["MAIL_TO"]
+    smtp_username = os.environ["SMTP_USERNAME"].strip()
+    smtp_password = os.environ["SMTP_PASSWORD"].strip().replace(" ", "")
+    mail_to = os.environ["MAIL_TO"].strip()
+
+    print(f"SMTP_USERNAME détecté : {smtp_username}")
+    print(f"MAIL_TO détecté : {mail_to}")
+    print(f"Longueur SMTP_PASSWORD : {len(smtp_password)} caractères")
 
     report_text = report_path.read_text(encoding="utf-8")
     body = extract_summary(report_text)
