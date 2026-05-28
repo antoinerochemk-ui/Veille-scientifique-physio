@@ -29,6 +29,29 @@ NCBI_TOOL_NAME = "veille_scientifique_physio"
 NCBI_EMAIL = "antoine.roche.mk@gmail.com"
 
 
+REPOSITORY_OR_PREPRINT_SOURCES = [
+    "mendeley data",
+    "figshare",
+    "zenodo",
+    "research square",
+    "arxiv",
+    "biorxiv",
+    "medrxiv",
+    "ssrn",
+    "preprints",
+    "osf",
+    "osf preprints",
+]
+
+LOW_PRIORITY_REPOSITORY_DOI_PREFIXES = [
+    "10.17632",  # Mendeley Data
+    "10.6084",  # Figshare
+    "10.5281",  # Zenodo
+    "10.21203", # Research Square
+    "10.48550", # arXiv
+]
+
+
 def load_yaml(path: Path) -> dict:
     if not path.exists():
         raise FileNotFoundError(f"Fichier introuvable : {path}")
@@ -56,7 +79,7 @@ def save_seen_articles(seen: set) -> None:
 
 def normalize_text(text: str) -> str:
     text = text or ""
-    return text.lower()
+    return str(text).lower()
 
 
 def clean_abstract(text: str) -> str:
@@ -70,11 +93,40 @@ def clean_abstract(text: str) -> str:
 
 def clean_doi(doi: str) -> str:
     doi = doi or ""
-    doi = doi.strip()
+    doi = str(doi).strip()
     doi = doi.replace("https://doi.org/", "")
     doi = doi.replace("http://dx.doi.org/", "")
     doi = doi.replace("doi:", "")
-    return doi.strip()
+    doi = doi.strip().strip(".")
+    return doi
+
+
+def canonical_doi_for_identifier(doi: str) -> str:
+    """
+    Normalise certains DOI de dépôts qui apparaissent souvent en double :
+    - Mendeley Data : 10.17632/xxxx et 10.17632/xxxx.1
+    - Figshare : 10.6084/m9.figshare.xxxxx et .v1
+    - Research Square : 10.21203/rs.3.rs-xxxx/v1
+    - Zenodo : 10.5281/zenodo.xxxxx
+    """
+    doi = clean_doi(doi).lower()
+
+    if not doi:
+        return ""
+
+    if doi.startswith("10.17632/"):
+        doi = re.sub(r"\.\d+$", "", doi)
+
+    if doi.startswith("10.6084/"):
+        doi = re.sub(r"\.v\d+$", "", doi)
+
+    if doi.startswith("10.21203/"):
+        doi = re.sub(r"/v\d+$", "", doi)
+
+    if doi.startswith("10.48550/"):
+        doi = re.sub(r"v\d+$", "", doi)
+
+    return doi
 
 
 def openalex_abstract_from_inverted_index(index: dict) -> str:
@@ -99,19 +151,20 @@ def openalex_abstract_from_inverted_index(index: dict) -> str:
 
 
 def article_identifier(article: dict) -> str:
-    doi = clean_doi(article.get("doi", ""))
+    doi = canonical_doi_for_identifier(article.get("doi", ""))
     pmid = article.get("pmid", "")
     pmcid = article.get("pmcid", "")
     title = article.get("title", "")
 
     if doi:
-        return f"doi:{doi.lower().strip()}"
+        return f"doi:{doi}"
     if pmid:
         return f"pmid:{str(pmid).strip()}"
     if pmcid:
         return f"pmcid:{str(pmcid).strip()}"
 
     clean_title = re.sub(r"\s+", " ", title.lower()).strip()
+    clean_title = re.sub(r"[^a-z0-9àâäéèêëîïôöùûüç\s-]", "", clean_title)
     return f"title:{clean_title}"
 
 
@@ -129,6 +182,67 @@ def build_article_url(item: dict) -> str:
 
     title = quote(item.get("title", ""))
     return f"https://europepmc.org/search?query={title}"
+
+
+def is_repository_or_preprint(article: dict) -> bool:
+    text = normalize_text(
+        " ".join(
+            [
+                article.get("source", ""),
+                article.get("journal", ""),
+                article.get("url", ""),
+                article.get("doi", ""),
+            ]
+        )
+    )
+
+    if any(source in text for source in REPOSITORY_OR_PREPRINT_SOURCES):
+        return True
+
+    doi = clean_doi(article.get("doi", "")).lower()
+    if any(doi.startswith(prefix) for prefix in LOW_PRIORITY_REPOSITORY_DOI_PREFIXES):
+        return True
+
+    return False
+
+
+def score_source_penalty(article: dict) -> int:
+    """
+    Pénalise les dépôts, préprints et sources non éditoriales.
+    Cela évite que Zenodo, Figshare, Mendeley Data, Research Square ou arXiv
+    remontent en Haute priorité uniquement grâce aux mots-clés.
+    """
+    if not is_repository_or_preprint(article):
+        return 0
+
+    text = normalize_text(
+        " ".join(
+            [
+                article.get("title", ""),
+                article.get("abstract", ""),
+                article.get("journal", ""),
+                article.get("url", ""),
+                article.get("doi", ""),
+            ]
+        )
+    )
+
+    # Exception : on garde les préprints IA un peu plus visibles,
+    # car l'IA évolue vite et certains articles importants sortent d'abord en préprint.
+    ai_terms = [
+        "artificial intelligence",
+        "large language model",
+        "large language models",
+        "chatgpt",
+        "generative ai",
+        "machine learning",
+        "llm",
+    ]
+
+    if any(term in text for term in ai_terms):
+        return -5
+
+    return -10
 
 
 def fetch_europe_pmc(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
@@ -344,8 +458,8 @@ def fetch_openalex(query: str, days_back: int = 14, page_size: int = 25) -> list
 def fetch_crossref(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
     """
     Recherche Crossref.
-    Utile pour repérer des DOI récents et des métadonnées éditeur.
-    Peut être plus bruyant qu'Europe PMC ou PubMed.
+    Actuellement désactivée dans fetch_from_all_sources, car trop bruyante.
+    La fonction est conservée pour pouvoir la réactiver plus tard.
     """
     start_date = (date.today() - timedelta(days=days_back)).isoformat()
     end_date = date.today().isoformat()
@@ -517,6 +631,15 @@ def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
 
         if category_matches:
             matched[category] = category_matches
+
+    penalty = score_source_penalty(article)
+
+    if penalty != 0:
+        total_score += penalty
+        matched["source_penalty"] = [f"{penalty} points : dépôt, préprint ou source non prioritaire"]
+
+    if total_score < 0:
+        total_score = 0
 
     return total_score, matched
 
@@ -708,7 +831,7 @@ def should_use_source_for_query(source_name: str, query_name: str, query: str) -
     """
     Filtrage léger pour éviter trop de bruit.
     - ERIC est surtout utile pour éducation, pédagogie, feedback, assessment, simulation.
-    - Crossref est gardé en complément, mais peut être bruyant.
+    - Crossref est désactivé dans fetch_from_all_sources, mais la logique est conservée.
     """
     text = normalize_text(query_name + " " + query)
 
@@ -725,6 +848,9 @@ def should_use_source_for_query(source_name: str, query_name: str, query: str) -
         "ecos",
         "competency",
         "concordance",
+        "clinical reasoning",
+        "health professions",
+        "medical education",
     ]
 
     if source_name == "ERIC":
@@ -737,12 +863,14 @@ def fetch_from_all_sources(query: str, name: str, days_back: int = 14, page_size
     """
     Interroge plusieurs sources bibliographiques gratuites.
 
-    Sources :
+    Sources actives :
     - Europe PMC : biomédical large, PubMed-like
     - PubMed : biomédical direct, NCBI
     - OpenAlex : interdisciplinaire, éducation, sciences sociales, DOI
-    - Crossref : métadonnées DOI éditeurs
     - ERIC : sciences de l'éducation
+
+    Source désactivée temporairement :
+    - Crossref : trop de bruit dans le rapport du 2026-05-28
     """
     all_articles = []
 
@@ -750,7 +878,7 @@ def fetch_from_all_sources(query: str, name: str, days_back: int = 14, page_size
         ("Europe PMC", fetch_europe_pmc),
         ("PubMed", fetch_pubmed),
         ("OpenAlex", fetch_openalex),
-        ("Crossref", fetch_crossref),
+        # ("Crossref", fetch_crossref),  # Désactivé temporairement : trop de bruit
         ("ERIC", fetch_eric),
     ]
 
