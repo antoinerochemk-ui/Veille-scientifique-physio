@@ -1,7 +1,7 @@
 # ============================================================
 # Règles de scoring pour la veille scientifique automatisée
 # Antoine Roche
-# Version optimisée — réduction du bruit clinique générique
+# Version stricte — réduction forte du bruit
 # ============================================================
 
 scoring:
@@ -11,7 +11,7 @@ scoring:
   # ============================================================
 
   core_concordance:
-    points: 14
+    points: 15
     keywords:
       - "learning by concordance"
       - "concordance-based learning"
@@ -23,7 +23,7 @@ scoring:
       - "script concordance"
 
   core_reasoning:
-    points: 10
+    points: 11
     keywords:
       - "clinical reasoning"
       - "diagnostic reasoning"
@@ -34,7 +34,7 @@ scoring:
       - "diagnostic decision making"
 
   uncertainty:
-    points: 9
+    points: 10
     keywords:
       - "diagnostic uncertainty"
       - "clinical uncertainty"
@@ -47,7 +47,7 @@ scoring:
       - "diagnostic ambiguity"
 
   clinical_reasoning_assessment:
-    points: 9
+    points: 10
     keywords:
       - "clinical reasoning assessment"
       - "diagnostic reasoning assessment"
@@ -57,7 +57,6 @@ scoring:
       - "clinical reasoning performance"
       - "diagnostic performance"
       - "diagnostic accuracy"
-      - "clinical decision support"
 
   # ============================================================
   # Éducation médicale / IFMK / évaluation
@@ -76,7 +75,7 @@ scoring:
       - "graduate medical education"
 
   physiotherapy_education_anchor:
-    points: 7
+    points: 8
     keywords:
       - "physical therapist education"
       - "physical therapy education"
@@ -104,7 +103,7 @@ scoring:
       - "flipped classroom"
 
   osce_ecos:
-    points: 7
+    points: 8
     keywords:
       - "OSCE"
       - "OSCEs"
@@ -124,8 +123,6 @@ scoring:
       - "clinical competency"
       - "workplace-based assessment"
       - "entrustable professional activities"
-      - "EPA"
-      - "EPAs"
 
   psychometrics_validity:
     points: 6
@@ -148,11 +145,11 @@ scoring:
       - "generalizability theory"
 
   # ============================================================
-  # Physiothérapie MSK / rachis — score volontairement modéré
+  # Physiothérapie MSK / rachis — score volontairement bas
   # ============================================================
 
   physio_anchor:
-    points: 3
+    points: 2
     keywords:
       - "physiotherapy"
       - "physical therapy"
@@ -161,16 +158,15 @@ scoring:
       - "rehabilitation"
 
   msk_anchor:
-    points: 3
+    points: 2
     keywords:
       - "musculoskeletal"
       - "musculoskeletal pain"
-      - "MSK"
       - "orthopaedic"
       - "orthopedic"
 
   spine_core:
-    points: 3
+    points: 2
     keywords:
       - "low back pain"
       - "neck pain"
@@ -178,12 +174,9 @@ scoring:
       - "lumbar spine"
       - "cervical spine"
       - "thoracic spine"
-      - "lumbar"
-      - "cervical"
-      - "thoracic"
 
   spine_reasoning_triage:
-    points: 7
+    points: 8
     keywords:
       - "diagnostic triage"
       - "specific low back pain"
@@ -197,13 +190,12 @@ scoring:
       - "screening for serious pathology"
 
   omt_reasoning:
-    points: 8
+    points: 9
     keywords:
       - "orthopaedic manual physical therapy"
       - "orthopedic manual physical therapy"
       - "orthopaedic manual therapy"
       - "orthopedic manual therapy"
-      - "OMPT"
       - "manual therapy clinical reasoning"
       - "expert reasoning"
       - "clinical expertise"
@@ -217,10 +209,6 @@ scoring:
       - "spinal mobilisation"
       - "joint mobilization"
       - "joint mobilisation"
-      - "mobilization"
-      - "mobilisation"
-      - "manipulation"
-      - "OMT"
 
   clinical_tests:
     points: 4
@@ -234,27 +222,18 @@ scoring:
       - "neurodynamic test"
       - "straight leg raise"
       - "slump test"
-      - "PIVM"
-      - "PAIVM"
       - "passive intervertebral motion"
       - "passive accessory intervertebral motion"
       - "passive physiological intervertebral motion"
-      - "palpation"
 
   active_treatments:
     points: 1
     keywords:
       - "therapeutic exercise"
       - "exercise therapy"
-      - "motor control"
       - "motor control exercise"
-      - "strengthening"
       - "graded activity"
       - "self-management"
-      - "core stability"
-      - "stabilization"
-      - "stabilisation"
-      - "McKenzie"
       - "Mechanical Diagnosis and Therapy"
       - "directional preference"
       - "centralization"
@@ -281,24 +260,23 @@ scoring:
       - "clinical case"
 
   # ============================================================
-  # IA — utile si reliée au raisonnement / éducation / diagnostic
+  # IA — valorisée seulement si elle touche le raisonnement,
+  # le diagnostic, l’éducation ou l’évaluation
   # ============================================================
 
   ai_anchor:
-    points: 5
+    points: 4
     keywords:
       - "artificial intelligence"
       - "large language model"
       - "large language models"
-      - "LLM"
-      - "LLMs"
       - "ChatGPT"
       - "generative AI"
       - "machine learning"
       - "chatbot"
 
   ai_clinical_reasoning:
-    points: 7
+    points: 8
     keywords:
       - "AI-assisted clinical reasoning"
       - "AI-assisted diagnosis"
@@ -306,12 +284,12 @@ scoring:
       - "conversational diagnostic AI"
       - "LLM clinical reasoning"
       - "LLM diagnostic reasoning"
-      - "LLM-as-a-Judge"
       - "prompt engineering"
       - "clinical decision support"
+      - "premature closure"
 
   ai_education:
-    points: 5
+    points: 6
     keywords:
       - "AI-assisted learning"
       - "AI-assisted education"
@@ -322,18 +300,17 @@ scoring:
       - "AI simulation"
 
   # ============================================================
-  # Types d’articles à valoriser
+  # Types d’articles à valoriser, mais modérément
   # ============================================================
 
   strong_study_design:
-    points: 4
+    points: 3
     keywords:
       - "systematic review"
       - "scoping review"
       - "meta-analysis"
       - "randomized controlled trial"
       - "randomised controlled trial"
-      - "RCT"
       - "cross-sectional study"
       - "cohort study"
       - "qualitative study"
@@ -342,7 +319,7 @@ scoring:
       - "mixed methods"
 
   guideline_or_review:
-    points: 3
+    points: 2
     keywords:
       - "clinical practice guideline"
       - "guideline"
@@ -352,11 +329,11 @@ scoring:
       - "position statement"
 
   # ============================================================
-  # Pénalités — réduction du bruit
+  # Pénalités — réduction forte du bruit
   # ============================================================
 
   broad_review_penalty:
-    points: -5
+    points: -8
     keywords:
       - "narrative review"
       - "overview of evidence"
@@ -367,7 +344,7 @@ scoring:
       - "bibliographic review"
 
   low_priority_clinical_topics:
-    points: -4
+    points: -8
     keywords:
       - "tele-rehabilitation"
       - "telerehabilitation"
@@ -383,9 +360,26 @@ scoring:
       - "hemiparesis"
       - "hearing rehabilitation"
       - "dentists"
+      - "pediatric health advice"
+      - "ophthalmology"
+      - "urology"
+      - "obstetric"
+      - "gynecologic"
+      - "tumor board"
+      - "rare diseases"
+      - "genetic test"
+      - "kidney disease"
+      - "diabetic kidney disease"
+      - "hepatocellular carcinoma"
+      - "colorectal cancer"
+      - "constipation"
+      - "gastroenterology"
+      - "neurology"
+      - "multiple sclerosis"
+      - "temporomandibular disorders"
 
   low_quality_or_repository_sources:
-    points: -8
+    points: -18
     keywords:
       - "Mendeley Data"
       - "Figshare"
@@ -401,7 +395,7 @@ scoring:
       - "conference abstract"
 
   low_specificity_journals:
-    points: -5
+    points: -12
     keywords:
       - "International Journal of Biology Pharmacy and Allied Sciences"
       - "International Journal of Drug Delivery Technology"
@@ -411,9 +405,13 @@ scoring:
       - "Revista fisio&terapia"
       - "Cureus"
       - "Neliti"
+      - "International Journal For Multidisciplinary Research"
+      - "International Journal of Science and Research"
+      - "Journal of Health Wellness and Community Research"
+      - "IntechOpen eBooks"
 
   negative_keywords:
-    points: -10
+    points: -18
     keywords:
       - "veterinary"
       - "animal study"
@@ -441,16 +439,34 @@ scoring:
       - "tumour"
       - "nursing students"
       - "nursing education"
+      - "pediatrics"
+      - "pediatric"
+      - "paediatric"
+      - "obstetrics"
+      - "gynecology"
+      - "gynaecology"
+      - "ophthalmology"
+      - "urology"
+      - "gastroenterology"
+      - "hepatology"
+      - "nephrology"
+      - "kidney"
+      - "renal"
+      - "diabetes"
+      - "diabetic"
+      - "colorectal"
+      - "hepatocellular"
+      - "tumor board"
 
 # ============================================================
 # Règles de décision
-# Seuils légèrement augmentés pour limiter les fausses hautes priorités
+# Seuils resserrés pour viser 5 à 15 articles en Haute priorité
 # ============================================================
 
 decision_rules:
-  high_priority_threshold: 24
-  watch_threshold: 15
-  peripheral_threshold: 8
+  high_priority_threshold: 32
+  watch_threshold: 18
+  peripheral_threshold: 9
 
 # ============================================================
 # Tags proposés dans le rapport
