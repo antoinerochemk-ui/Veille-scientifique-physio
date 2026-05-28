@@ -184,11 +184,8 @@ scoring:
     points: 12
     keywords:
       - "diagnostic triage"
-      - "specific low back pain"
-      - "non-specific low back pain"
-      - "nonspecific low back pain"
-      - "red flags"
       - "differential diagnosis"
+      - "red flags"
       - "clinical vignette"
       - "case vignette"
       - "diagnostic classification"
@@ -197,6 +194,13 @@ scoring:
       - "specific spinal pathology"
       - "lumbar spinal stenosis"
       - "spondyloarthritis"
+
+  low_back_pain_classification:
+    points: 3
+    keywords:
+      - "specific low back pain"
+      - "non-specific low back pain"
+      - "nonspecific low back pain"
 
   omt_reasoning:
     points: 13
