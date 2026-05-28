@@ -1,6 +1,8 @@
 # ============================================================
 # Requêtes de veille scientifique automatisée
-# Antoine Roche — Physiothérapie, éducation médicale, raisonnement clinique, rachis
+# Antoine Roche — Physiothérapie, éducation médicale,
+# raisonnement clinique, Formation par Concordance, rachis
+# Version améliorée — requêtes ciblées
 # ============================================================
 
 queries:
@@ -10,25 +12,31 @@ queries:
   # ============================================================
 
   - name: "Formation par concordance"
-    query: '"learning by concordance" OR "concordance-based learning" OR "concordance learning" OR "formation par concordance"'
+    query: '("learning by concordance" OR "concordance-based learning" OR "concordance learning" OR "formation par concordance")'
 
   - name: "Test de concordance de script"
-    query: '"script concordance test" OR "script concordance testing" OR "script concordance" OR "test de concordance de script"'
+    query: '("script concordance test" OR "script concordance tests" OR "script concordance testing" OR "script concordance" OR "test de concordance de script" OR "tests de concordance de script")'
+
+  - name: "Formation par concordance et raisonnement clinique"
+    query: '("script concordance" OR "learning by concordance" OR "concordance-based learning" OR "formation par concordance") AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "clinical decision-making" OR uncertainty)'
 
   - name: "Raisonnement clinique santé"
-    query: '"clinical reasoning" AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy")'
+    query: '("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "clinical decision-making" OR "therapeutic reasoning") AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy" OR rehabilitation)'
 
   - name: "Raisonnement clinique physiothérapie"
-    query: '"clinical reasoning" AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+    query: '("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "clinical decision-making" OR "therapeutic reasoning") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR "physical therapists" OR rehabilitation)'
+
+  - name: "Raisonnement clinique expert physiothérapie MSK"
+    query: '("clinical reasoning" OR "diagnostic reasoning" OR "expert reasoning" OR expertise) AND (physiotherapy OR "physical therapy" OR "physical therapist") AND (musculoskeletal OR orthopaedic OR orthopedic OR "manual therapy" OR "orthopaedic manual therapy" OR "orthopedic manual therapy")'
 
   - name: "Incertitude et raisonnement clinique"
-    query: '("clinical uncertainty" OR uncertainty OR "diagnostic uncertainty" OR "therapeutic uncertainty") AND ("clinical reasoning" OR decision-making OR "clinical decision-making") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+    query: '("clinical uncertainty" OR "diagnostic uncertainty" OR "therapeutic uncertainty" OR "tolerance of uncertainty" OR "intolerance of uncertainty" OR "uncertainty tolerance" OR "diagnostic ambiguity") AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "clinical decision-making" OR diagnosis) AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy" OR rehabilitation)'
 
   - name: "Tolérance à l’incertitude en santé"
-    query: '("tolerance of uncertainty" OR "intolerance of uncertainty" OR "uncertainty tolerance") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+    query: '("tolerance of uncertainty" OR "intolerance of uncertainty" OR "uncertainty tolerance" OR "ambiguity tolerance" OR "tolerance of ambiguity") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy" OR rehabilitation OR "clinical reasoning")'
 
   - name: "Incertitude diagnostique en physiothérapie"
-    query: '("diagnostic uncertainty" OR "clinical uncertainty" OR uncertainty) AND (physiotherapy OR "physical therapy" OR rehabilitation) AND (diagnosis OR assessment OR "clinical reasoning")'
+    query: '("diagnostic uncertainty" OR "clinical uncertainty" OR "diagnostic ambiguity") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR rehabilitation) AND (diagnosis OR assessment OR "clinical reasoning" OR "diagnostic reasoning")'
 
 
   # ============================================================
@@ -36,19 +44,31 @@ queries:
   # ============================================================
 
   - name: "Sciences de l’éducation en santé"
-    query: '("health professions education" OR "medical education") AND (learning OR teaching OR curriculum OR pedagogy OR "instructional design")'
+    query: '("health professions education" OR "medical education" OR "clinical education") AND (learning OR teaching OR curriculum OR pedagogy OR "instructional design" OR assessment OR feedback)'
 
   - name: "Feedback en éducation médicale"
-    query: 'feedback AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy") AND (learning OR assessment OR "clinical reasoning")'
+    query: '(feedback OR debriefing OR "formative assessment" OR "reflective practice" OR "self-regulated learning") AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy") AND (learning OR assessment OR "clinical reasoning" OR competence OR performance)'
 
   - name: "Évaluation des compétences en santé"
-    query: '("competency-based education" OR "competency-based medical education" OR assessment) AND ("health professions education" OR physiotherapy OR "physical therapy")'
+    query: '("competency-based education" OR "competency-based medical education" OR "competency assessment" OR "competency-based assessment" OR "workplace-based assessment" OR "entrustable professional activities" OR EPA OR EPAs) AND ("health professions education" OR "medical education" OR physiotherapy OR "physical therapy")'
 
   - name: "ECOS OSCE physiothérapie"
-    query: '(OSCE OR "objective structured clinical examination") AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+    query: '(OSCE OR OSCEs OR "objective structured clinical examination" OR "objective structured clinical examinations" OR ECOS) AND (physiotherapy OR "physical therapy" OR "physical therapist" OR rehabilitation)'
+
+  - name: "ECOS OSCE raisonnement clinique validité"
+    query: '(OSCE OR OSCEs OR "objective structured clinical examination" OR "objective structured clinical examinations" OR ECOS) AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical competence" OR "clinical skills" OR "clinical performance") AND (validity OR reliability OR psychometric OR "measurement properties" OR assessment OR evaluation)'
+
+  - name: "Outils d’évaluation du raisonnement clinique"
+    query: '("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "clinical decision-making") AND ("assessment tool" OR "assessment tools" OR instrument OR scale OR questionnaire OR rubric OR checklist) AND (validity OR reliability OR psychometric OR "measurement properties" OR reproducibility) AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
 
   - name: "Simulation et cas cliniques en éducation santé"
-    query: '(simulation OR "case-based learning" OR "clinical case" OR "case study") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+    query: '("simulation-based learning" OR "simulation based learning" OR simulation OR "simulated patient" OR "standardized patient" OR "standardised patient" OR "case-based learning" OR "clinical case" OR "case study") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy")'
+
+  - name: "Simulation raisonnement clinique physiothérapie"
+    query: '("simulation-based learning" OR "simulation based learning" OR simulation OR "simulated patient" OR "standardized patient" OR "standardised patient") AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "clinical competence") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR "health professions education" OR "medical education")'
+
+  - name: "Psychométrie éducation médicale et santé"
+    query: '(psychometric OR validity OR reliability OR "measurement properties" OR "assessment validity" OR "validity evidence") AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy") AND (assessment OR evaluation OR rubric OR checklist OR questionnaire OR scale OR instrument)'
 
 
   # ============================================================
@@ -56,19 +76,25 @@ queries:
   # ============================================================
 
   - name: "Low back pain physiotherapy"
-    query: '("low back pain" OR "lumbar pain" OR lumbago) AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+    query: '("low back pain" OR "lumbar pain" OR lumbago OR "non-specific low back pain" OR "nonspecific low back pain") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR rehabilitation)'
 
   - name: "Neck pain physiotherapy"
-    query: '("neck pain" OR cervicalgia OR "cervical spine") AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+    query: '("neck pain" OR cervicalgia OR "cervical pain" OR "cervical spine") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR rehabilitation)'
 
   - name: "Thoracic spine physiotherapy"
-    query: '("thoracic spine" OR "thoracic pain" OR "thoracic manual therapy") AND (physiotherapy OR "physical therapy" OR rehabilitation)'
+    query: '("thoracic spine" OR "thoracic pain" OR "thoracic manual therapy" OR "thoracic spine pain") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR rehabilitation OR "manual therapy")'
 
   - name: "Thérapie manuelle rachis"
-    query: '("manual therapy" OR mobilization OR mobilisation OR manipulation OR "spinal manipulation" OR "spinal mobilization") AND (spine OR spinal OR lumbar OR cervical OR thoracic)'
+    query: '("manual therapy" OR "spinal manipulation" OR "spinal mobilization" OR "spinal mobilisation" OR "joint mobilization" OR "joint mobilisation" OR manipulation OR mobilisation OR mobilization) AND ("low back pain" OR "neck pain" OR "spinal pain" OR spine OR spinal OR lumbar OR cervical OR thoracic) AND (physiotherapy OR "physical therapy" OR rehabilitation OR "manual therapy")'
 
   - name: "OMT rachis"
-    query: '("orthopaedic manual therapy" OR "orthopedic manual therapy" OR OMT) AND (spine OR spinal OR lumbar OR cervical OR thoracic)'
+    query: '("orthopaedic manual therapy" OR "orthopedic manual therapy" OR "orthopaedic manual physical therapy" OR "orthopedic manual physical therapy" OR OMPT OR OMT) AND (spine OR spinal OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
+
+  - name: "Raisonnement clinique en thérapie manuelle orthopédique"
+    query: '("orthopaedic manual physical therapy" OR "orthopedic manual physical therapy" OR "orthopaedic manual therapy" OR "orthopedic manual therapy" OR OMPT OR OMT OR "manual therapy") AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "expert reasoning" OR expertise) AND (physiotherapy OR "physical therapy" OR "physical therapist")'
+
+  - name: "Triage diagnostique lombalgie physiothérapie"
+    query: '("low back pain" OR "lumbar pain") AND ("diagnostic triage" OR "specific low back pain" OR "serious pathology" OR "red flags" OR "differential diagnosis" OR "diagnostic accuracy" OR "clinical vignette" OR vignette) AND (physiotherapy OR "physical therapy" OR "manual therapy" OR "musculoskeletal physiotherapy")'
 
 
   # ============================================================
@@ -76,19 +102,55 @@ queries:
   # ============================================================
 
   - name: "Tests cliniques rachis validité fiabilité"
-    query: '(validity OR reliability OR reproducibility OR "diagnostic accuracy") AND ("clinical test" OR "physical examination" OR assessment) AND (spine OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
+    query: '(validity OR reliability OR reproducibility OR "diagnostic accuracy" OR "measurement properties") AND ("clinical test" OR "clinical tests" OR "physical examination" OR assessment OR "manual assessment" OR "movement test" OR "provocation test") AND (spine OR spinal OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain") AND (physiotherapy OR "physical therapy" OR "manual therapy" OR rehabilitation)'
 
   - name: "PIVM PAIVM rachis"
-    query: '(PIVM OR PAIVM OR "passive intervertebral motion" OR "passive accessory intervertebral motion" OR palpation) AND (spine OR lumbar OR cervical OR thoracic)'
+    query: '(PIVM OR PAIVM OR "passive intervertebral motion" OR "passive accessory intervertebral motion" OR "passive physiological intervertebral motion" OR "intervertebral motion" OR "spinal palpation" OR palpation) AND (spine OR spinal OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
 
   - name: "Traitements actifs rachis"
-    query: '(exercise OR "motor control" OR strengthening OR "graded activity" OR "self-management" OR "therapeutic exercise") AND ("low back pain" OR "neck pain" OR spine OR spinal)'
+    query: '("therapeutic exercise" OR "exercise therapy" OR exercise OR "motor control" OR "motor control exercise" OR strengthening OR "graded activity" OR "self-management" OR "active treatment" OR "active rehabilitation") AND ("low back pain" OR "neck pain" OR "spinal pain" OR spine OR spinal OR lumbar OR cervical) AND (physiotherapy OR "physical therapy" OR rehabilitation)'
 
   - name: "Traitements passifs rachis"
-    query: '(massage OR traction OR mobilization OR mobilisation OR manipulation OR "manual therapy" OR "passive treatment" OR electrotherapy) AND ("low back pain" OR "neck pain" OR spine OR spinal)'
+    query: '(massage OR traction OR mobilization OR mobilisation OR manipulation OR "manual therapy" OR "passive treatment" OR electrotherapy OR "ultrasound therapy" OR "shortwave diathermy" OR "shockwave therapy") AND ("low back pain" OR "neck pain" OR "spinal pain" OR spine OR spinal OR lumbar OR cervical) AND (physiotherapy OR "physical therapy" OR rehabilitation OR "manual therapy")'
 
   - name: "McKenzie MDT rachis"
-    query: '("McKenzie" OR "Mechanical Diagnosis and Therapy" OR MDT OR centralization OR centralisation OR "directional preference") AND ("low back pain" OR "neck pain" OR spine OR spinal)'
+    query: '("McKenzie" OR "Mechanical Diagnosis and Therapy" OR MDT OR centralization OR centralisation OR "directional preference") AND ("low back pain" OR "neck pain" OR spine OR spinal OR lumbar OR cervical)'
 
   - name: "Cas cliniques rachis physiothérapie"
-    query: '("case report" OR "case study" OR "clinical case") AND (physiotherapy OR "physical therapy" OR rehabilitation) AND (spine OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
+    query: '("case report" OR "case study" OR "clinical case" OR "case vignette") AND (physiotherapy OR "physical therapy" OR rehabilitation OR "manual therapy") AND (spine OR spinal OR lumbar OR cervical OR thoracic OR "low back pain" OR "neck pain")'
+
+  - name: "Neurodynamique rachis validité"
+    query: '("neurodynamic test" OR neurodynamic OR neurodynamics OR "upper limb neurodynamic test" OR ULNT OR "straight leg raise" OR "slump test") AND ("neck pain" OR "low back pain" OR cervical OR lumbar OR spine OR spinal) AND (validity OR reliability OR diagnostic OR "physical examination" OR physiotherapy OR "physical therapy")'
+
+
+  # ============================================================
+  # Bloc 5 — IA, diagnostic, formation, raisonnement clinique
+  # ============================================================
+
+  - name: "IA raisonnement clinique physiothérapie MSK"
+    query: '("artificial intelligence" OR "large language model" OR "large language models" OR ChatGPT OR "generative AI" OR "machine learning") AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR diagnosis OR "diagnostic accuracy") AND (physiotherapy OR "physical therapy" OR "physical therapist" OR musculoskeletal OR "musculoskeletal pain" OR rehabilitation)'
+
+  - name: "IA éducation médicale feedback évaluation"
+    query: '("artificial intelligence" OR "large language model" OR ChatGPT OR "generative AI" OR "machine learning" OR chatbot) AND ("medical education" OR "health professions education" OR physiotherapy OR "physical therapy") AND (feedback OR assessment OR "clinical reasoning" OR simulation OR OSCE OR "clinical skills")'
+
+
+  # ============================================================
+  # Bloc 6 — Revues systématiques, Cochrane, synthèses de preuves
+  # ============================================================
+
+  - name: "Cochrane physiothérapie rachis rééducation"
+    query: '("Cochrane Database Syst Rev" OR "Cochrane Database of Systematic Reviews") AND (physiotherapy OR "physical therapy" OR rehabilitation OR "low back pain" OR "neck pain" OR spine OR spinal OR musculoskeletal OR "manual therapy" OR exercise)'
+
+  - name: "Revues systématiques raisonnement clinique éducation santé"
+    query: '("systematic review" OR "scoping review" OR "meta-analysis" OR "rapid review") AND ("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "script concordance" OR OSCE OR simulation) AND (physiotherapy OR "physical therapy" OR "medical education" OR "health professions education")'
+
+  - name: "Revues systématiques rachis physiothérapie"
+    query: '("systematic review" OR "meta-analysis" OR "scoping review" OR "network meta-analysis") AND ("low back pain" OR "neck pain" OR "spinal pain" OR cervical OR lumbar) AND (physiotherapy OR "physical therapy" OR "manual therapy" OR "exercise therapy" OR rehabilitation)'
+
+
+  # ============================================================
+  # Bloc 7 — Études qualitatives, expertise, raisonnement professionnel
+  # ============================================================
+
+  - name: "Études qualitatives raisonnement clinique physiothérapie"
+    query: '("clinical reasoning" OR "diagnostic reasoning" OR "clinical decision making" OR "therapeutic reasoning") AND (qualitative OR phenomenology OR phenomenological OR "grounded theory" OR interviews OR "focus groups" OR "thematic analysis") AND (physiotherapy OR "physical therapy" OR "manual therapy" OR "health professions education")'
