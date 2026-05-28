@@ -1,7 +1,7 @@
 # ============================================================
 # Règles de scoring pour la veille scientifique automatisée
 # Antoine Roche
-# Version stricte — réduction forte du bruit
+# Version stricte + classification stratégique
 # ============================================================
 
 scoring:
@@ -11,7 +11,7 @@ scoring:
   # ============================================================
 
   core_concordance:
-    points: 15
+    points: 16
     keywords:
       - "learning by concordance"
       - "concordance-based learning"
@@ -23,7 +23,7 @@ scoring:
       - "script concordance"
 
   core_reasoning:
-    points: 11
+    points: 12
     keywords:
       - "clinical reasoning"
       - "diagnostic reasoning"
@@ -34,7 +34,7 @@ scoring:
       - "diagnostic decision making"
 
   uncertainty:
-    points: 10
+    points: 11
     keywords:
       - "diagnostic uncertainty"
       - "clinical uncertainty"
@@ -47,7 +47,7 @@ scoring:
       - "diagnostic ambiguity"
 
   clinical_reasoning_assessment:
-    points: 10
+    points: 11
     keywords:
       - "clinical reasoning assessment"
       - "diagnostic reasoning assessment"
@@ -75,7 +75,7 @@ scoring:
       - "graduate medical education"
 
   physiotherapy_education_anchor:
-    points: 8
+    points: 9
     keywords:
       - "physical therapist education"
       - "physical therapy education"
@@ -125,7 +125,7 @@ scoring:
       - "entrustable professional activities"
 
   psychometrics_validity:
-    points: 6
+    points: 5
     keywords:
       - "validity evidence"
       - "construct validity"
@@ -145,7 +145,7 @@ scoring:
       - "generalizability theory"
 
   # ============================================================
-  # Physiothérapie MSK / rachis — score volontairement bas
+  # Physiothérapie MSK / rachis — score volontairement modéré
   # ============================================================
 
   physio_anchor:
@@ -176,7 +176,7 @@ scoring:
       - "thoracic spine"
 
   spine_reasoning_triage:
-    points: 8
+    points: 9
     keywords:
       - "diagnostic triage"
       - "specific low back pain"
@@ -190,7 +190,7 @@ scoring:
       - "screening for serious pathology"
 
   omt_reasoning:
-    points: 9
+    points: 10
     keywords:
       - "orthopaedic manual physical therapy"
       - "orthopedic manual physical therapy"
@@ -260,8 +260,7 @@ scoring:
       - "clinical case"
 
   # ============================================================
-  # IA — valorisée seulement si elle touche le raisonnement,
-  # le diagnostic, l’éducation ou l’évaluation
+  # IA — valorisée si liée au raisonnement, diagnostic ou formation
   # ============================================================
 
   ai_anchor:
@@ -276,7 +275,7 @@ scoring:
       - "chatbot"
 
   ai_clinical_reasoning:
-    points: 8
+    points: 9
     keywords:
       - "AI-assisted clinical reasoning"
       - "AI-assisted diagnosis"
@@ -300,7 +299,7 @@ scoring:
       - "AI simulation"
 
   # ============================================================
-  # Types d’articles à valoriser, mais modérément
+  # Types d’articles à valoriser modérément
   # ============================================================
 
   strong_study_design:
@@ -342,9 +341,11 @@ scoring:
       - "general review"
       - "literature review"
       - "bibliographic review"
+      - "pictorial review"
+      - "commentary"
 
   low_priority_clinical_topics:
-    points: -8
+    points: -10
     keywords:
       - "tele-rehabilitation"
       - "telerehabilitation"
@@ -377,9 +378,14 @@ scoring:
       - "neurology"
       - "multiple sclerosis"
       - "temporomandibular disorders"
+      - "osteoporosis"
+      - "pressure ulcers"
+      - "interstitial lung disease"
+      - "hearing aid"
+      - "audiology"
 
   low_quality_or_repository_sources:
-    points: -18
+    points: -20
     keywords:
       - "Mendeley Data"
       - "Figshare"
@@ -393,9 +399,11 @@ scoring:
       - "thesis"
       - "dissertation"
       - "conference abstract"
+      - "university repository"
+      - "institutional repository"
 
   low_specificity_journals:
-    points: -12
+    points: -15
     keywords:
       - "International Journal of Biology Pharmacy and Allied Sciences"
       - "International Journal of Drug Delivery Technology"
@@ -409,9 +417,13 @@ scoring:
       - "International Journal of Science and Research"
       - "Journal of Health Wellness and Community Research"
       - "IntechOpen eBooks"
+      - "Digital Showcase Research, Scholarship, & Creative Works"
+      - "Academic Visions"
+      - "Ciencia y Frontera"
+      - "INSPIREE Indonesian Sport Innovation Review"
 
   negative_keywords:
-    points: -18
+    points: -25
     keywords:
       - "veterinary"
       - "animal study"
@@ -457,16 +469,28 @@ scoring:
       - "colorectal"
       - "hepatocellular"
       - "tumor board"
+      - "pharmacist"
+      - "pharmacy students"
+      - "dentist"
+      - "audiology"
+      - "otolaryngology"
+      - "emergency medicine"
+      - "anesthesiology"
+      - "radiology"
+      - "nuclear medicine"
+      - "computed tomography"
+      - "CT angiography"
 
 # ============================================================
 # Règles de décision
-# Seuils resserrés pour viser 5 à 15 articles en Haute priorité
+# Cohérent avec le nouveau veille.py :
+# Haute priorité = score élevé + signal stratégique
 # ============================================================
 
 decision_rules:
-  high_priority_threshold: 32
-  watch_threshold: 18
-  peripheral_threshold: 9
+  high_priority_threshold: 40
+  watch_threshold: 20
+  peripheral_threshold: 10
 
 # ============================================================
 # Tags proposés dans le rapport
