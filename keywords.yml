@@ -1,35 +1,158 @@
 # ============================================================
 # Règles de scoring pour la veille scientifique automatisée
-# Version resserrée — Antoine Roche
+# Antoine Roche
+# Version optimisée — réduction du bruit clinique générique
 # ============================================================
 
 scoring:
 
+  # ============================================================
+  # Très haute priorité — cœur de thèse / formations
+  # ============================================================
+
   core_concordance:
-    points: 12
+    points: 14
     keywords:
       - "learning by concordance"
       - "concordance-based learning"
+      - "concordance learning"
       - "formation par concordance"
       - "script concordance test"
+      - "script concordance tests"
       - "script concordance testing"
       - "script concordance"
 
   core_reasoning:
-    points: 8
+    points: 10
     keywords:
       - "clinical reasoning"
+      - "diagnostic reasoning"
+      - "therapeutic reasoning"
       - "clinical decision-making"
       - "clinical decision making"
-      - "diagnostic reasoning"
+      - "diagnostic decision-making"
+      - "diagnostic decision making"
+
+  uncertainty:
+    points: 9
+    keywords:
       - "diagnostic uncertainty"
       - "clinical uncertainty"
       - "therapeutic uncertainty"
       - "tolerance of uncertainty"
       - "intolerance of uncertainty"
+      - "uncertainty tolerance"
+      - "ambiguity tolerance"
+      - "tolerance of ambiguity"
+      - "diagnostic ambiguity"
+
+  clinical_reasoning_assessment:
+    points: 9
+    keywords:
+      - "clinical reasoning assessment"
+      - "diagnostic reasoning assessment"
+      - "assessment of clinical reasoning"
+      - "clinical reasoning skills"
+      - "clinical reasoning ability"
+      - "clinical reasoning performance"
+      - "diagnostic performance"
+      - "diagnostic accuracy"
+      - "clinical decision support"
+
+  # ============================================================
+  # Éducation médicale / IFMK / évaluation
+  # ============================================================
+
+  education_anchor:
+    points: 5
+    keywords:
+      - "health professions education"
+      - "medical education"
+      - "physiotherapy education"
+      - "physical therapist education"
+      - "physical therapy education"
+      - "clinical education"
+      - "undergraduate medical education"
+      - "graduate medical education"
+
+  physiotherapy_education_anchor:
+    points: 7
+    keywords:
+      - "physical therapist education"
+      - "physical therapy education"
+      - "physiotherapy education"
+      - "doctor of physical therapy"
+      - "DPT students"
+      - "physiotherapy students"
+      - "physical therapy students"
+      - "student physical therapists"
+
+  education_methods:
+    points: 4
+    keywords:
+      - "feedback"
+      - "debriefing"
+      - "formative assessment"
+      - "reflective practice"
+      - "self-regulated learning"
+      - "case-based learning"
+      - "problem-based learning"
+      - "simulation-based learning"
+      - "standardized patient"
+      - "standardised patient"
+      - "virtual patient"
+      - "flipped classroom"
+
+  osce_ecos:
+    points: 7
+    keywords:
+      - "OSCE"
+      - "OSCEs"
+      - "objective structured clinical examination"
+      - "objective structured clinical examinations"
+      - "ECOS"
+      - "structured clinical examination"
+
+  competency_assessment:
+    points: 5
+    keywords:
+      - "competency-based education"
+      - "competency-based medical education"
+      - "competency assessment"
+      - "competency-based assessment"
+      - "clinical competence"
+      - "clinical competency"
+      - "workplace-based assessment"
+      - "entrustable professional activities"
+      - "EPA"
+      - "EPAs"
+
+  psychometrics_validity:
+    points: 6
+    keywords:
+      - "validity evidence"
+      - "construct validity"
+      - "content validity"
+      - "criterion validity"
+      - "reliability"
+      - "inter-rater reliability"
+      - "intra-rater reliability"
+      - "test-retest reliability"
+      - "measurement properties"
+      - "psychometric"
+      - "psychometrics"
+      - "COSMIN"
+      - "MERSQI"
+      - "MMERSQI"
+      - "Cronbach"
+      - "generalizability theory"
+
+  # ============================================================
+  # Physiothérapie MSK / rachis — score volontairement modéré
+  # ============================================================
 
   physio_anchor:
-    points: 5
+    points: 3
     keywords:
       - "physiotherapy"
       - "physical therapy"
@@ -37,31 +160,17 @@ scoring:
       - "physical therapists"
       - "rehabilitation"
 
-  education_anchor:
-    points: 4
-    keywords:
-      - "health professions education"
-      - "medical education"
-      - "physiotherapy education"
-      - "physical therapist education"
-      - "clinical education"
-
-  education_methods:
+  msk_anchor:
     points: 3
     keywords:
-      - "feedback"
-      - "OSCE"
-      - "objective structured clinical examination"
-      - "simulation-based learning"
-      - "case-based learning"
-      - "problem-based learning"
-      - "competency-based education"
-      - "assessment tool"
-      - "assessment tools"
-      - "entrustable professional activities"
+      - "musculoskeletal"
+      - "musculoskeletal pain"
+      - "MSK"
+      - "orthopaedic"
+      - "orthopedic"
 
   spine_core:
-    points: 5
+    points: 3
     keywords:
       - "low back pain"
       - "neck pain"
@@ -73,15 +182,41 @@ scoring:
       - "cervical"
       - "thoracic"
 
-  manual_therapy:
-    points: 4
+  spine_reasoning_triage:
+    points: 7
     keywords:
-      - "manual therapy"
+      - "diagnostic triage"
+      - "specific low back pain"
+      - "non-specific low back pain"
+      - "nonspecific low back pain"
+      - "red flags"
+      - "differential diagnosis"
+      - "clinical vignette"
+      - "case vignette"
+      - "diagnostic classification"
+      - "screening for serious pathology"
+
+  omt_reasoning:
+    points: 8
+    keywords:
+      - "orthopaedic manual physical therapy"
+      - "orthopedic manual physical therapy"
       - "orthopaedic manual therapy"
       - "orthopedic manual therapy"
+      - "OMPT"
+      - "manual therapy clinical reasoning"
+      - "expert reasoning"
+      - "clinical expertise"
+
+  manual_therapy:
+    points: 2
+    keywords:
+      - "manual therapy"
       - "spinal manipulation"
       - "spinal mobilization"
       - "spinal mobilisation"
+      - "joint mobilization"
+      - "joint mobilisation"
       - "mobilization"
       - "mobilisation"
       - "manipulation"
@@ -90,24 +225,29 @@ scoring:
   clinical_tests:
     points: 4
     keywords:
-      - "diagnostic accuracy"
-      - "validity"
-      - "reliability"
-      - "reproducibility"
       - "clinical test"
+      - "clinical tests"
       - "physical examination"
+      - "manual assessment"
+      - "movement test"
+      - "provocation test"
+      - "neurodynamic test"
+      - "straight leg raise"
+      - "slump test"
       - "PIVM"
       - "PAIVM"
       - "passive intervertebral motion"
       - "passive accessory intervertebral motion"
+      - "passive physiological intervertebral motion"
       - "palpation"
 
   active_treatments:
-    points: 3
+    points: 1
     keywords:
       - "therapeutic exercise"
       - "exercise therapy"
       - "motor control"
+      - "motor control exercise"
       - "strengthening"
       - "graded activity"
       - "self-management"
@@ -121,7 +261,7 @@ scoring:
       - "centralisation"
 
   passive_treatments:
-    points: 2
+    points: 0
     keywords:
       - "traction"
       - "massage"
@@ -129,13 +269,148 @@ scoring:
       - "ultrasound therapy"
       - "shortwave diathermy"
       - "shockwave"
+      - "heat therapy"
+      - "taping"
+      - "kinesiotaping"
 
   case_reports:
-    points: 1
+    points: 0
     keywords:
       - "case report"
       - "case study"
       - "clinical case"
+
+  # ============================================================
+  # IA — utile si reliée au raisonnement / éducation / diagnostic
+  # ============================================================
+
+  ai_anchor:
+    points: 5
+    keywords:
+      - "artificial intelligence"
+      - "large language model"
+      - "large language models"
+      - "LLM"
+      - "LLMs"
+      - "ChatGPT"
+      - "generative AI"
+      - "machine learning"
+      - "chatbot"
+
+  ai_clinical_reasoning:
+    points: 7
+    keywords:
+      - "AI-assisted clinical reasoning"
+      - "AI-assisted diagnosis"
+      - "diagnostic AI"
+      - "conversational diagnostic AI"
+      - "LLM clinical reasoning"
+      - "LLM diagnostic reasoning"
+      - "LLM-as-a-Judge"
+      - "prompt engineering"
+      - "clinical decision support"
+
+  ai_education:
+    points: 5
+    keywords:
+      - "AI-assisted learning"
+      - "AI-assisted education"
+      - "AI-assisted feedback"
+      - "AI-patient"
+      - "virtual standardized patient"
+      - "virtual standardised patient"
+      - "AI simulation"
+
+  # ============================================================
+  # Types d’articles à valoriser
+  # ============================================================
+
+  strong_study_design:
+    points: 4
+    keywords:
+      - "systematic review"
+      - "scoping review"
+      - "meta-analysis"
+      - "randomized controlled trial"
+      - "randomised controlled trial"
+      - "RCT"
+      - "cross-sectional study"
+      - "cohort study"
+      - "qualitative study"
+      - "phenomenological study"
+      - "mixed-methods"
+      - "mixed methods"
+
+  guideline_or_review:
+    points: 3
+    keywords:
+      - "clinical practice guideline"
+      - "guideline"
+      - "consensus statement"
+      - "Delphi"
+      - "expert consensus"
+      - "position statement"
+
+  # ============================================================
+  # Pénalités — réduction du bruit
+  # ============================================================
+
+  broad_review_penalty:
+    points: -5
+    keywords:
+      - "narrative review"
+      - "overview of evidence"
+      - "critical review"
+      - "broad review"
+      - "general review"
+      - "literature review"
+      - "bibliographic review"
+
+  low_priority_clinical_topics:
+    points: -4
+    keywords:
+      - "tele-rehabilitation"
+      - "telerehabilitation"
+      - "posture assessment"
+      - "smartphone applications"
+      - "round shoulder posture"
+      - "adhesive capsulitis"
+      - "shoulder pain"
+      - "subacromial impingement"
+      - "knee osteoarthritis"
+      - "hip osteoarthritis"
+      - "stroke"
+      - "hemiparesis"
+      - "hearing rehabilitation"
+      - "dentists"
+
+  low_quality_or_repository_sources:
+    points: -8
+    keywords:
+      - "Mendeley Data"
+      - "Figshare"
+      - "Zenodo"
+      - "Research Square"
+      - "arXiv"
+      - "bioRxiv"
+      - "medRxiv"
+      - "SSRN"
+      - "preprint"
+      - "thesis"
+      - "dissertation"
+      - "conference abstract"
+
+  low_specificity_journals:
+    points: -5
+    keywords:
+      - "International Journal of Biology Pharmacy and Allied Sciences"
+      - "International Journal of Drug Delivery Technology"
+      - "The Healer Journal of Physiotherapy and Rehabilitation Sciences"
+      - "World Journal of Advanced Research and Reviews"
+      - "International Journal of Progressive Research in Science and Engineering"
+      - "Revista fisio&terapia"
+      - "Cureus"
+      - "Neliti"
 
   negative_keywords:
     points: -10
@@ -151,20 +426,35 @@ scoring:
       - "endoscopic spine surgery"
       - "spinal surgery"
       - "lumbar interbody fusion"
+      - "fusion surgery"
       - "graft"
       - "wound"
       - "needle-knife"
       - "pharmacological"
       - "drug therapy"
+      - "opioid"
       - "cancer"
       - "breast cancer"
+      - "oncology"
+      - "radiation oncology"
+      - "tumor"
+      - "tumour"
       - "nursing students"
       - "nursing education"
 
+# ============================================================
+# Règles de décision
+# Seuils légèrement augmentés pour limiter les fausses hautes priorités
+# ============================================================
+
 decision_rules:
-  high_priority_threshold: 22
-  watch_threshold: 14
+  high_priority_threshold: 24
+  watch_threshold: 15
   peripheral_threshold: 8
+
+# ============================================================
+# Tags proposés dans le rapport
+# ============================================================
 
 tags:
   high_priority:
