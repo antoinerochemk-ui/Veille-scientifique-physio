@@ -21,6 +21,10 @@ EUROPE_PMC_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 PUBMED_ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 PUBMED_ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 
+OPENALEX_WORKS_URL = "https://api.openalex.org/works"
+CROSSREF_WORKS_URL = "https://api.crossref.org/works"
+ERIC_URL = "https://api.ies.ed.gov/eric/"
+
 NCBI_TOOL_NAME = "veille_scientifique_physio"
 NCBI_EMAIL = "antoine.roche.mk@gmail.com"
 
@@ -55,10 +59,49 @@ def normalize_text(text: str) -> str:
     return text.lower()
 
 
+def clean_abstract(text: str) -> str:
+    if not text:
+        return ""
+
+    text = re.sub(r"<[^>]+>", " ", str(text))
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def clean_doi(doi: str) -> str:
+    doi = doi or ""
+    doi = doi.strip()
+    doi = doi.replace("https://doi.org/", "")
+    doi = doi.replace("http://dx.doi.org/", "")
+    doi = doi.replace("doi:", "")
+    return doi.strip()
+
+
+def openalex_abstract_from_inverted_index(index: dict) -> str:
+    """
+    OpenAlex fournit parfois les abstracts sous forme d'index inversé.
+    Cette fonction reconstruit l'abstract si disponible.
+    """
+    if not index:
+        return ""
+
+    positions = []
+
+    for word, word_positions in index.items():
+        for position in word_positions:
+            positions.append((position, word))
+
+    if not positions:
+        return ""
+
+    positions.sort(key=lambda x: x[0])
+    return " ".join(word for _, word in positions)
+
+
 def article_identifier(article: dict) -> str:
-    doi = article.get("doi")
-    pmid = article.get("pmid")
-    pmcid = article.get("pmcid")
+    doi = clean_doi(article.get("doi", ""))
+    pmid = article.get("pmid", "")
+    pmcid = article.get("pmcid", "")
     title = article.get("title", "")
 
     if doi:
@@ -72,19 +115,10 @@ def article_identifier(article: dict) -> str:
     return f"title:{clean_title}"
 
 
-def clean_abstract(text: str) -> str:
-    if not text:
-        return ""
-
-    text = re.sub(r"<[^>]+>", " ", text)
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
-
-
 def build_article_url(item: dict) -> str:
-    doi = item.get("doi")
-    pmid = item.get("pmid")
-    pmcid = item.get("pmcid")
+    doi = clean_doi(item.get("doi", ""))
+    pmid = item.get("pmid", "")
+    pmcid = item.get("pmcid", "")
 
     if doi:
         return f"https://doi.org/{doi}"
@@ -123,13 +157,15 @@ def fetch_europe_pmc(query: str, days_back: int = 14, page_size: int = 25) -> li
     articles = []
 
     for item in results:
+        doi = clean_doi(item.get("doi", ""))
+
         article = {
             "title": item.get("title", "").strip(),
             "authors": item.get("authorString", "").strip(),
             "journal": item.get("journalTitle", "").strip(),
             "year": item.get("pubYear", "").strip(),
             "publication_date": item.get("firstPublicationDate", "").strip(),
-            "doi": item.get("doi", "").strip(),
+            "doi": doi,
             "pmid": item.get("pmid", "").strip(),
             "pmcid": item.get("pmcid", "").strip(),
             "abstract": clean_abstract(item.get("abstractText", "")),
@@ -146,8 +182,7 @@ def fetch_europe_pmc(query: str, days_back: int = 14, page_size: int = 25) -> li
 def fetch_pubmed(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
     """
     Recherche directe dans PubMed via NCBI E-utilities.
-    Cette fonction récupère les métadonnées principales : titre, auteurs, revue, année,
-    date de publication, DOI, PMID, PMCID et lien PubMed.
+    Récupère titre, auteurs, revue, année, date, DOI, PMID, PMCID et lien PubMed.
     """
     start_date = (date.today() - timedelta(days=days_back)).strftime("%Y/%m/%d")
     end_date = date.today().strftime("%Y/%m/%d")
@@ -198,16 +233,15 @@ def fetch_pubmed(query: str, days_back: int = 14, page_size: int = 25) -> list[d
             [author.get("name", "") for author in authors_list if author.get("name")]
         )
 
-        articleids = item.get("articleids", [])
         doi = ""
         pmcid = ""
 
-        for article_id in articleids:
+        for article_id in item.get("articleids", []):
             id_type = article_id.get("idtype", "")
             value = article_id.get("value", "")
 
             if id_type == "doi":
-                doi = value.strip()
+                doi = clean_doi(value)
             elif id_type == "pmc":
                 pmcid = value.strip()
 
@@ -230,6 +264,223 @@ def fetch_pubmed(query: str, days_back: int = 14, page_size: int = 25) -> list[d
         }
 
         if title:
+            articles.append(article)
+
+    return articles
+
+
+def fetch_openalex(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
+    """
+    Recherche OpenAlex.
+    Utile pour élargir la veille au-delà du biomédical :
+    sciences de l'éducation, sciences sociales, santé, DOI, revues hors PubMed.
+    """
+    start_date = (date.today() - timedelta(days=days_back)).isoformat()
+    end_date = date.today().isoformat()
+
+    params = {
+        "search": query,
+        "filter": f"from_publication_date:{start_date},to_publication_date:{end_date}",
+        "per-page": page_size,
+        "sort": "publication_date:desc",
+        "mailto": NCBI_EMAIL,
+    }
+
+    response = requests.get(OPENALEX_WORKS_URL, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+
+    results = data.get("results", [])
+    articles = []
+
+    for item in results:
+        title = item.get("title") or ""
+
+        doi_url = item.get("doi") or ""
+        doi = clean_doi(doi_url)
+
+        authorships = item.get("authorships", [])
+        authors = ", ".join(
+            [
+                authorship.get("author", {}).get("display_name", "")
+                for authorship in authorships
+                if authorship.get("author", {}).get("display_name")
+            ]
+        )
+
+        primary_location = item.get("primary_location") or {}
+        source_obj = primary_location.get("source") or {}
+        journal = source_obj.get("display_name", "") if source_obj else ""
+
+        pub_date = item.get("publication_date") or ""
+        year = str(item.get("publication_year") or "")
+
+        abstract = clean_abstract(
+            openalex_abstract_from_inverted_index(
+                item.get("abstract_inverted_index") or {}
+            )
+        )
+
+        article = {
+            "title": title.strip(),
+            "authors": authors.strip(),
+            "journal": journal.strip(),
+            "year": year,
+            "publication_date": pub_date,
+            "doi": doi,
+            "pmid": "",
+            "pmcid": "",
+            "abstract": abstract,
+            "source": "OpenAlex",
+            "url": f"https://doi.org/{doi}" if doi else item.get("id", ""),
+        }
+
+        if article["title"]:
+            articles.append(article)
+
+    return articles
+
+
+def fetch_crossref(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
+    """
+    Recherche Crossref.
+    Utile pour repérer des DOI récents et des métadonnées éditeur.
+    Peut être plus bruyant qu'Europe PMC ou PubMed.
+    """
+    start_date = (date.today() - timedelta(days=days_back)).isoformat()
+    end_date = date.today().isoformat()
+
+    params = {
+        "query.bibliographic": query,
+        "filter": f"from-pub-date:{start_date},until-pub-date:{end_date},type:journal-article",
+        "rows": page_size,
+        "sort": "published",
+        "order": "desc",
+        "mailto": NCBI_EMAIL,
+    }
+
+    response = requests.get(CROSSREF_WORKS_URL, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+
+    items = data.get("message", {}).get("items", [])
+    articles = []
+
+    for item in items:
+        title_list = item.get("title", [])
+        title = title_list[0] if title_list else ""
+
+        doi = clean_doi(item.get("DOI", ""))
+
+        authors_list = item.get("author", [])
+        authors_parts = []
+
+        for author in authors_list:
+            given = author.get("given", "")
+            family = author.get("family", "")
+            full_name = f"{family} {given}".strip()
+            if full_name:
+                authors_parts.append(full_name)
+
+        authors = ", ".join(authors_parts)
+
+        container = item.get("container-title", [])
+        journal = container[0] if container else ""
+
+        published = (
+            item.get("published-print")
+            or item.get("published-online")
+            or item.get("published")
+            or {}
+        )
+
+        date_parts = published.get("date-parts", [[]])[0]
+        year = str(date_parts[0]) if len(date_parts) >= 1 else ""
+        month = str(date_parts[1]).zfill(2) if len(date_parts) >= 2 else "01"
+        day = str(date_parts[2]).zfill(2) if len(date_parts) >= 3 else "01"
+        publication_date = f"{year}-{month}-{day}" if year else ""
+
+        abstract = clean_abstract(item.get("abstract", ""))
+
+        article = {
+            "title": title.strip(),
+            "authors": authors.strip(),
+            "journal": journal.strip(),
+            "year": year,
+            "publication_date": publication_date,
+            "doi": doi,
+            "pmid": "",
+            "pmcid": "",
+            "abstract": abstract,
+            "source": "Crossref",
+            "url": f"https://doi.org/{doi}" if doi else item.get("URL", ""),
+        }
+
+        if article["title"]:
+            articles.append(article)
+
+    return articles
+
+
+def fetch_eric(query: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
+    """
+    Recherche ERIC.
+    Utile pour sciences de l'éducation, pédagogie, curriculum, feedback,
+    assessment et formation des professionnels.
+    """
+    start_year = (date.today() - timedelta(days=days_back)).year
+    end_year = date.today().year
+
+    params = {
+        "search": query,
+        "format": "json",
+        "rows": page_size,
+        "start": 0,
+    }
+
+    response = requests.get(ERIC_URL, params=params, timeout=30)
+    response.raise_for_status()
+    data = response.json()
+
+    records = data.get("response", {}).get("docs", [])
+    articles = []
+
+    for item in records:
+        title = item.get("title", "")
+
+        authors_data = item.get("author", [])
+        if isinstance(authors_data, list):
+            authors = ", ".join(authors_data)
+        else:
+            authors = str(authors_data)
+
+        year = str(item.get("publicationdateyear", "") or "")
+        if year and year.isdigit():
+            year_int = int(year)
+            if year_int < start_year or year_int > end_year:
+                continue
+
+        journal = item.get("source", "")
+        abstract = clean_abstract(item.get("description", ""))
+
+        eric_id = item.get("id", "")
+        doi = clean_doi(item.get("doi", ""))
+
+        article = {
+            "title": title.strip(),
+            "authors": authors.strip(),
+            "journal": journal.strip(),
+            "year": year,
+            "publication_date": year,
+            "doi": doi,
+            "pmid": "",
+            "pmcid": "",
+            "abstract": abstract,
+            "source": "ERIC",
+            "url": f"https://eric.ed.gov/?id={eric_id}" if eric_id else "",
+        }
+
+        if article["title"]:
             articles.append(article)
 
     return articles
@@ -453,21 +704,61 @@ def generate_report(new_articles: list[dict]) -> Path:
     return report_path
 
 
+def should_use_source_for_query(source_name: str, query_name: str, query: str) -> bool:
+    """
+    Filtrage léger pour éviter trop de bruit.
+    - ERIC est surtout utile pour éducation, pédagogie, feedback, assessment, simulation.
+    - Crossref est gardé en complément, mais peut être bruyant.
+    """
+    text = normalize_text(query_name + " " + query)
+
+    education_terms = [
+        "education",
+        "teaching",
+        "learning",
+        "feedback",
+        "assessment",
+        "simulation",
+        "curriculum",
+        "pedagogy",
+        "osce",
+        "ecos",
+        "competency",
+        "concordance",
+    ]
+
+    if source_name == "ERIC":
+        return any(term in text for term in education_terms)
+
+    return True
+
+
 def fetch_from_all_sources(query: str, name: str, days_back: int = 14, page_size: int = 25) -> list[dict]:
     """
     Interroge plusieurs sources bibliographiques gratuites.
-    Pour l'instant :
-    - Europe PMC
-    - PubMed direct
+
+    Sources :
+    - Europe PMC : biomédical large, PubMed-like
+    - PubMed : biomédical direct, NCBI
+    - OpenAlex : interdisciplinaire, éducation, sciences sociales, DOI
+    - Crossref : métadonnées DOI éditeurs
+    - ERIC : sciences de l'éducation
     """
     all_articles = []
 
     sources = [
         ("Europe PMC", fetch_europe_pmc),
         ("PubMed", fetch_pubmed),
+        ("OpenAlex", fetch_openalex),
+        ("Crossref", fetch_crossref),
+        ("ERIC", fetch_eric),
     ]
 
     for source_name, fetcher in sources:
+        if not should_use_source_for_query(source_name, name, query):
+            print(f"  Source : {source_name} ignorée pour cette requête")
+            continue
+
         try:
             print(f"  Source : {source_name}")
             articles = fetcher(query=query, days_back=days_back, page_size=page_size)
