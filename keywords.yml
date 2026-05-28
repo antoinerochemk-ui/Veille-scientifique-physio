@@ -1,7 +1,7 @@
 # ============================================================
 # Règles de scoring pour la veille scientifique automatisée
 # Antoine Roche
-# Version stricte + classification stratégique
+# Version stricte + classification stratégique + rachis rééquilibré
 # ============================================================
 
 scoring:
@@ -145,7 +145,7 @@ scoring:
       - "generalizability theory"
 
   # ============================================================
-  # Physiothérapie MSK / rachis — score volontairement modéré
+  # Physiothérapie MSK / rachis — rééquilibré
   # ============================================================
 
   physio_anchor:
@@ -166,7 +166,7 @@ scoring:
       - "orthopedic"
 
   spine_core:
-    points: 2
+    points: 3
     keywords:
       - "low back pain"
       - "neck pain"
@@ -174,9 +174,14 @@ scoring:
       - "lumbar spine"
       - "cervical spine"
       - "thoracic spine"
+      - "lumbar pain"
+      - "cervical pain"
+      - "radicular pain"
+      - "cervicogenic headache"
+      - "cervical sensorimotor control"
 
   spine_reasoning_triage:
-    points: 9
+    points: 12
     keywords:
       - "diagnostic triage"
       - "specific low back pain"
@@ -188,9 +193,13 @@ scoring:
       - "case vignette"
       - "diagnostic classification"
       - "screening for serious pathology"
+      - "spinal pathology"
+      - "specific spinal pathology"
+      - "lumbar spinal stenosis"
+      - "spondyloarthritis"
 
   omt_reasoning:
-    points: 10
+    points: 13
     keywords:
       - "orthopaedic manual physical therapy"
       - "orthopedic manual physical therapy"
@@ -199,9 +208,11 @@ scoring:
       - "manual therapy clinical reasoning"
       - "expert reasoning"
       - "clinical expertise"
+      - "manual physical therapy fellows"
+      - "manual therapy fellows"
 
   manual_therapy:
-    points: 2
+    points: 3
     keywords:
       - "manual therapy"
       - "spinal manipulation"
@@ -209,9 +220,13 @@ scoring:
       - "spinal mobilisation"
       - "joint mobilization"
       - "joint mobilisation"
+      - "cervical mobilization"
+      - "cervical mobilisation"
+      - "lumbar mobilization"
+      - "lumbar mobilisation"
 
   clinical_tests:
-    points: 4
+    points: 6
     keywords:
       - "clinical test"
       - "clinical tests"
@@ -222,9 +237,13 @@ scoring:
       - "neurodynamic test"
       - "straight leg raise"
       - "slump test"
+      - "upper limb neurodynamic test"
       - "passive intervertebral motion"
       - "passive accessory intervertebral motion"
       - "passive physiological intervertebral motion"
+      - "cervical range of motion"
+      - "joint position error"
+      - "sensorimotor control"
 
   active_treatments:
     points: 1
@@ -485,6 +504,7 @@ scoring:
 # Règles de décision
 # Cohérent avec le nouveau veille.py :
 # Haute priorité = score élevé + signal stratégique
+# + voie spécifique rachis stratégique si score >= 32
 # ============================================================
 
 decision_rules:
