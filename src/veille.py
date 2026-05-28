@@ -82,6 +82,34 @@ def normalize_text(text: str) -> str:
     return str(text).lower()
 
 
+def keyword_matches_text(keyword: str, text: str) -> bool:
+    """
+    Recherche un mot-clé de façon plus stricte qu'un simple 'keyword in text'.
+
+    Objectifs :
+    - éviter que ECOS soit détecté dans 'ecosystem' ou 'encompasses'
+    - éviter que OMT, OSCE, AI, etc. soient détectés dans des mots plus longs
+    - garder les expressions importantes comme 'clinical reasoning'
+      ou 'script concordance test'
+    """
+    keyword_norm = normalize_text(keyword).strip()
+
+    if not keyword_norm:
+        return False
+
+    # Acronymes / mots courts : correspondance exacte avec frontières de mot.
+    if len(keyword_norm) <= 5 and re.fullmatch(r"[a-z0-9]+", keyword_norm):
+        pattern = rf"\b{re.escape(keyword_norm)}\b"
+        return re.search(pattern, text) is not None
+
+    # Expressions : espaces flexibles + frontières de mot.
+    escaped = re.escape(keyword_norm)
+    escaped = escaped.replace(r"\ ", r"\s+")
+    pattern = rf"\b{escaped}\b"
+
+    return re.search(pattern, text) is not None
+
+
 def clean_abstract(text: str) -> str:
     if not text:
         return ""
@@ -623,9 +651,7 @@ def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
         category_matches = []
 
         for keyword in keywords:
-            keyword_norm = normalize_text(keyword)
-
-            if keyword_norm in text:
+            if keyword_matches_text(keyword, text):
                 total_score += points
                 category_matches.append(keyword)
 
@@ -644,19 +670,115 @@ def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
     return total_score, matched
 
 
-def classify_article(score: int, keyword_config: dict) -> str:
+def classify_article(score: int, keyword_config: dict, matched: dict, article: dict) -> str:
+    """
+    Classe les articles avec une règle plus stricte.
+
+    Principe :
+    - Un score élevé ne suffit plus à être Haute priorité.
+    - Pour être Haute priorité, l'article doit toucher un axe stratégique.
+    - Les articles hors champ ou issus de sources faibles sont plafonnés.
+    """
     rules = keyword_config.get("decision_rules", {})
 
-    high = int(rules.get("high_priority_threshold", 22))
-    watch = int(rules.get("watch_threshold", 14))
-    peripheral = int(rules.get("peripheral_threshold", 8))
+    high = int(rules.get("high_priority_threshold", 40))
+    watch = int(rules.get("watch_threshold", 20))
+    peripheral = int(rules.get("peripheral_threshold", 10))
 
-    if score >= high:
+    matched_categories = set(matched.keys())
+
+    strategic_categories = {
+        "core_concordance",
+        "core_reasoning",
+        "uncertainty",
+        "clinical_reasoning_assessment",
+        "physiotherapy_education_anchor",
+        "spine_reasoning_triage",
+        "omt_reasoning",
+        "ai_clinical_reasoning",
+    }
+
+    education_assessment_combo = (
+        "education_anchor" in matched_categories
+        and (
+            "osce_ecos" in matched_categories
+            or "competency_assessment" in matched_categories
+            or "psychometrics_validity" in matched_categories
+            or "education_methods" in matched_categories
+        )
+    )
+
+    ai_education_combo = (
+        "ai_anchor" in matched_categories
+        and (
+            "education_anchor" in matched_categories
+            or "education_methods" in matched_categories
+            or "ai_education" in matched_categories
+        )
+    )
+
+    has_strategic_signal = (
+        bool(matched_categories.intersection(strategic_categories))
+        or education_assessment_combo
+        or ai_education_combo
+    )
+
+    has_hard_negative = any(
+        category in matched_categories
+        for category in [
+            "negative_keywords",
+            "low_quality_or_repository_sources",
+            "low_specificity_journals",
+        ]
+    )
+
+    has_only_generic_psychometrics = (
+        "psychometrics_validity" in matched_categories
+        and not bool(
+            matched_categories.intersection(
+                {
+                    "core_concordance",
+                    "core_reasoning",
+                    "uncertainty",
+                    "clinical_reasoning_assessment",
+                    "education_anchor",
+                    "physiotherapy_education_anchor",
+                    "osce_ecos",
+                    "spine_reasoning_triage",
+                    "omt_reasoning",
+                    "ai_clinical_reasoning",
+                }
+            )
+        )
+    )
+
+    # Articles hors champ ou sources faibles : jamais Haute priorité,
+    # sauf exception très forte liée à TCS/FpC.
+    if has_hard_negative and "core_concordance" not in matched_categories:
+        if score >= watch:
+            return "À surveiller"
+        if score >= peripheral:
+            return "Périphérique"
+        return "Faible priorité"
+
+    # Psychométrie générique sans lien clair avec tes axes : plafonnée.
+    if has_only_generic_psychometrics:
+        if score >= watch:
+            return "À surveiller"
+        if score >= peripheral:
+            return "Périphérique"
+        return "Faible priorité"
+
+    # Haute priorité seulement si score élevé + signal stratégique.
+    if score >= high and has_strategic_signal:
         return "Haute priorité"
+
     if score >= watch:
         return "À surveiller"
+
     if score >= peripheral:
         return "Périphérique"
+
     return "Faible priorité"
 
 
@@ -698,8 +820,6 @@ def propose_tags(matched: dict, article: dict, keyword_config: dict) -> list[str
             "manual therapy",
             "orthopaedic manual therapy",
             "orthopedic manual therapy",
-            "omt",
-            "ompt",
             "spinal manipulation",
             "spinal mobilization",
             "spinal mobilisation",
@@ -870,7 +990,7 @@ def fetch_from_all_sources(query: str, name: str, days_back: int = 14, page_size
     - ERIC : sciences de l'éducation
 
     Source désactivée temporairement :
-    - Crossref : trop de bruit dans le rapport du 2026-05-28
+    - Crossref : trop de bruit
     """
     all_articles = []
 
@@ -945,7 +1065,7 @@ def main() -> int:
                 continue
 
             score, matched = score_article(article, keyword_config)
-            decision = classify_article(score, keyword_config)
+            decision = classify_article(score, keyword_config, matched, article)
             tags = propose_tags(matched, article, keyword_config)
 
             collected.append(
