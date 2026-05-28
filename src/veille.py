@@ -672,12 +672,13 @@ def score_article(article: dict, keyword_config: dict) -> tuple[int, dict]:
 
 def classify_article(score: int, keyword_config: dict, matched: dict, article: dict) -> str:
     """
-    Classe les articles avec une règle plus stricte.
+    Classe les articles avec une règle stricte mais équilibrée.
 
     Principe :
-    - Un score élevé ne suffit plus à être Haute priorité.
-    - Pour être Haute priorité, l'article doit toucher un axe stratégique.
-    - Les articles hors champ ou issus de sources faibles sont plafonnés.
+    - Haute priorité classique : score élevé + signal stratégique fort.
+    - Haute priorité rachis : score un peu plus bas accepté si l'article est
+      clairement sur rachis + diagnostic / raisonnement / OMT / tests / validité.
+    - Les articles hors champ ou issus de sources faibles restent plafonnés.
     """
     rules = keyword_config.get("decision_rules", {})
 
@@ -717,10 +718,38 @@ def classify_article(score: int, keyword_config: dict, matched: dict, article: d
         )
     )
 
+    spine_strategic_combo = (
+        "spine_core" in matched_categories
+        and (
+            "spine_reasoning_triage" in matched_categories
+            or "omt_reasoning" in matched_categories
+            or "clinical_tests" in matched_categories
+            or "psychometrics_validity" in matched_categories
+            or "manual_therapy" in matched_categories
+        )
+    )
+
+    omt_reasoning_combo = (
+        "omt_reasoning" in matched_categories
+        and (
+            "core_reasoning" in matched_categories
+            or "physio_anchor" in matched_categories
+            or "msk_anchor" in matched_categories
+        )
+    )
+
+    spine_ai_combo = (
+        "spine_core" in matched_categories
+        and "ai_clinical_reasoning" in matched_categories
+    )
+
     has_strategic_signal = (
         bool(matched_categories.intersection(strategic_categories))
         or education_assessment_combo
         or ai_education_combo
+        or spine_strategic_combo
+        or omt_reasoning_combo
+        or spine_ai_combo
     )
 
     has_hard_negative = any(
@@ -744,8 +773,10 @@ def classify_article(score: int, keyword_config: dict, matched: dict, article: d
                     "education_anchor",
                     "physiotherapy_education_anchor",
                     "osce_ecos",
+                    "spine_core",
                     "spine_reasoning_triage",
                     "omt_reasoning",
+                    "clinical_tests",
                     "ai_clinical_reasoning",
                 }
             )
@@ -753,8 +784,10 @@ def classify_article(score: int, keyword_config: dict, matched: dict, article: d
     )
 
     # Articles hors champ ou sources faibles : jamais Haute priorité,
-    # sauf exception très forte liée à TCS/FpC.
-    if has_hard_negative and "core_concordance" not in matched_categories:
+    # sauf exception forte liée à TCS/FpC ou rachis stratégique.
+    if has_hard_negative and not (
+        "core_concordance" in matched_categories or spine_strategic_combo
+    ):
         if score >= watch:
             return "À surveiller"
         if score >= peripheral:
@@ -769,8 +802,13 @@ def classify_article(score: int, keyword_config: dict, matched: dict, article: d
             return "Périphérique"
         return "Faible priorité"
 
-    # Haute priorité seulement si score élevé + signal stratégique.
+    # Haute priorité standard : score élevé + signal stratégique.
     if score >= high and has_strategic_signal:
+        return "Haute priorité"
+
+    # Haute priorité rachis : seuil un peu plus bas si l'article est clairement
+    # lié au rachis, au diagnostic, à l'OMT, aux tests ou à la validité.
+    if score >= 32 and (spine_strategic_combo or omt_reasoning_combo or spine_ai_combo):
         return "Haute priorité"
 
     if score >= watch:
